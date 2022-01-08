@@ -19,7 +19,7 @@ SRC_JARS = jars/framework.jar$(SEP)jars/framework-deps.jar
 TST_JARS = $(SRC_JARS)$(SEP)jars/grader.jar$(SEP)jars/grader-deps.jar
 
 JAVA_SRC = $(shell find labs/*/src -type f -name "*.java")
-JAVA_TST = $(shell find labs/*/tst -type f -name "*.java")
+JAVA_TST = $(shell find labs/*/tst -type f -name "*.java") $(shell find examples -type f -name "*.java") 
 
 
 ################################################################################

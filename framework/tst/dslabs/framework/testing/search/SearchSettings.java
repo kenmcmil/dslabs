@@ -42,6 +42,7 @@ public class SearchSettings extends TestSettings<SearchSettings> {
     private volatile int maxDepth = -1;
     private volatile int numThreads = defaultNumThreads();
     private volatile int outputFreqSecs = GlobalSettings.verbose() ? 5 : -1;
+    private volatile boolean ordered = false;
 
     private final Collection<StatePredicate> prunes =
             new ConcurrentLinkedQueue<>();
@@ -136,6 +137,14 @@ public class SearchSettings extends TestSettings<SearchSettings> {
         return this;
     }
 
+    public void ordered(boolean ordered) {
+        this.ordered = ordered;
+    }
+
+    public boolean ordered() {
+        return this.ordered;
+    }
+    
     @Override
     public SearchSettings clear() {
         super.clear();

@@ -44,11 +44,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.AbstractCollection;
 import java.util.Stack;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -65,19 +67,20 @@ import org.apache.commons.lang3.tuple.Pair;
 public final class SearchState extends AbstractState
         implements Serializable, Cloneable {
 
-    private final Set<MessageEnvelope> network;
+    private final AbstractCollection<MessageEnvelope> network;
 
     /**
      * Allows the state to store (temporarily) ignored messages, which are not
      * considered as potential steps during search.
      */
-    private final Set<MessageEnvelope> droppedNetwork;
+    private final AbstractCollection<MessageEnvelope> droppedNetwork;
 
     @EqualsAndHashCode.Include private final Map<Address, TimerQueue> timers;
 
     @Getter private final transient SearchState previous;
     @Getter private final transient Event previousEvent;
     @Getter private final transient int depth;
+    @Getter private final transient boolean ordered;
 
     @Getter private transient Throwable thrownException;
 
@@ -89,8 +92,29 @@ public final class SearchState extends AbstractState
         super(Collections.emptySet(), Collections.emptySet(),
                 Collections.emptySet(), stateGenerator);
 
+        this.ordered = false;
         this.network = new HashSet<>();
         this.droppedNetwork = new HashSet<>();
+        this.timers = new HashMap<>();
+        this.previous = null;
+        this.previousEvent = null;
+        this.depth = 0;
+        this.newMessages = new HashSet<>();
+        this.newTimers = new HashSet<>();
+    }
+
+    public SearchState(StateGenerator stateGenerator, boolean ordered) {
+        super(Collections.emptySet(), Collections.emptySet(),
+              Collections.emptySet(), stateGenerator);
+
+        this.ordered = ordered;
+        if (this.ordered) {
+            this.network = new ArrayList<>();
+            this.droppedNetwork = new ArrayList<>();
+        } else {
+            this.network = new HashSet<>();
+            this.droppedNetwork = new HashSet<>();
+        }
         this.timers = new HashMap<>();
         this.previous = null;
         this.previousEvent = null;
@@ -108,8 +132,17 @@ public final class SearchState extends AbstractState
                         Event previousEvent) {
         super(previous, addressToClone);
 
-        network = new HashSet<>(previous.network);
-        droppedNetwork = new HashSet<>(previous.droppedNetwork);
+        this.ordered = previous.ordered;
+        if (this.ordered) {
+            network = new ArrayList<>(previous.network);
+            if (previousEvent.isMessage()) {
+                network.remove(previousEvent.message());
+            }
+            droppedNetwork = new ArrayList<>(previous.droppedNetwork);
+        } else {
+            network = new HashSet<>(previous.network);
+            droppedNetwork = new HashSet<>(previous.droppedNetwork);
+        }
         timers = new HashMap<>(previous.timers);
         this.previous = previous;
         this.previousEvent = previousEvent;
@@ -128,8 +161,14 @@ public final class SearchState extends AbstractState
     private SearchState(SearchState source) {
         super(source, null);
 
-        network = new HashSet<>(source.network);
-        droppedNetwork = new HashSet<>(source.droppedNetwork);
+        this.ordered = source.ordered;
+        if (this.ordered) {
+            network = new ArrayList<>(source.network);
+            droppedNetwork = new ArrayList<>(source.droppedNetwork);
+        } else {
+            network = new HashSet<>(source.network);
+            droppedNetwork = new HashSet<>(source.droppedNetwork);
+        }
         timers = new HashMap<>(source.timers);
         this.previous = source.previous;
         this.previousEvent = source.previousEvent;
@@ -153,7 +192,11 @@ public final class SearchState extends AbstractState
     @Override
     @EqualsAndHashCode.Include
     public Iterable<MessageEnvelope> network() {
-        return Sets.union(network, droppedNetwork);
+        if (this.ordered) {
+            return Iterables.concat(network,droppedNetwork);
+        } else {
+            return Sets.union(new HashSet<MessageEnvelope>(network), new HashSet<MessageEnvelope>(droppedNetwork));
+        }
     }
 
     @Override
@@ -230,10 +273,22 @@ public final class SearchState extends AbstractState
         // These checks MUST stay in-sync with the individual step methods
 
         // Deliver all possible messages
-        for (MessageEnvelope message : network) {
-            if (hasNode(message.to().rootAddress()) &&
+        if (ordered) {
+            HashSet<Address> seen = new HashSet<Address>();
+            for (MessageEnvelope message : network) {
+                if (hasNode(message.to().rootAddress()) && !seen.contains(message.to().rootAddress()) &&
                     settings.shouldDeliver(message)) {
-                events.add(new Event(message));
+                    seen.add(message.to().rootAddress());
+                    events.add(new Event(message));
+                }
+            }
+            
+        } else {
+            for (MessageEnvelope message : network) {
+                if (hasNode(message.to().rootAddress()) &&
+                    settings.shouldDeliver(message)) {
+                    events.add(new Event(message));
+                }
             }
         }
 

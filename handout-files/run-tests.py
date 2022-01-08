@@ -102,10 +102,14 @@ def run_tests(lab, part=None, no_run=False, no_search=False,
 
         command.append('--filter=%s=%s' % (EXCLUDE_FILTER, ','.join(exclude)))
 
-    test_suite = 'dslabs.testsuites.Lab%s%sTestSuite' % (
-        lab, 'Part%s' % part if part else "")
-
-    test_file = os.path.join('out/tst', *test_suite.split('.')) + '.class'
+    if type(lab) is int:
+        test_suite = 'dslabs.testsuites.Lab%s%sTestSuite' % (
+            lab, 'Part%s' % part if part else "")
+        test_file = os.path.join('out/tst', *test_suite.split('.')) + '.class'
+    else:
+        test_suite = lab + '.TestSuite'
+        test_file = os.path.join('out/tst', *test_suite.split('.')) + '.class'
+        
     if not os.path.isfile(test_file):
         print("Count not find test file %s" % test_file)
         return
@@ -142,7 +146,9 @@ def main():
     """Parse args and run tests."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-l', '--lab', type=int, nargs=None, required=True,
+    parser.add_argument('-l', '--lab', type=int, nargs=None, default = None,
+                        help="lab number for tests to run")
+    parser.add_argument('-x', '--example', type=str, nargs=None, default = None,
                         help="lab number for tests to run")
     parser.add_argument('-p', '--part', type=int, nargs='?', default=None,
                         help="part number for tests to run")
@@ -187,10 +193,20 @@ def main():
 
     args = parser.parse_args()
 
+    if args.lab is None and args.example is None:
+        sys.stderr.write("must specify either --lab or --example")
+        sys.exit(1)
+
+    if args.lab is not None and args.example is not None:
+        sys.stderr.write("must specify one of --lab or --example")
+        sys.exit(1)
+        
+    lab = args.lab if args.lab is not None else args.example
+
     if args.debugger:
-        run_viz_debugger(args.lab, args.debugger, args.no_viz_server)
+        run_viz_debugger(lab, args.debugger, args.no_viz_server)
     else:
-        run_tests(args.lab,
+        run_tests(lab,
                   part=args.part,
                   no_run=args.no_run,
                   no_search=args.no_search,
@@ -203,6 +219,7 @@ def main():
                   test_num=args.test_num,
                   assertions=args.assertions)
 
+        
 
 if __name__ == '__main__':
     main()

@@ -4,6 +4,7 @@ ODDITY_URL = https://github.com/uwplse/oddity/releases/download/v0.39a/oddity.ja
 
 FRAMEWORK_FILES = $(shell find framework -type f | sed 's/ /\\ /g')
 LAB_FILES = $(shell find labs -type f | sed 's/ /\\ /g')
+EX_FILES = $(shell find examples -type f | sed 's/ /\\ /g')
 HANDOUT_FILES = $(shell find handout-files -type f | sed 's/ /\\ /g')
 
 JAR_FILES = build/libs/framework.jar \
@@ -46,10 +47,10 @@ deps/oddity.jar:
 	mkdir -p deps
 	wget -O $@ $(ODDITY_URL)
 
-build/handout/: $(LAB_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ deps/oddity.jar
+build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ deps/oddity.jar
 	rm -rf $@
 	mkdir $@ $@jars
-	$(CP) -r labs handout-files/. $(OTHER_FILES) $@
+	$(CP) -r labs examples handout-files/. $(OTHER_FILES) $@
 	$(CP) $(JAR_FILES) deps/oddity.jar $@jars
 
 build/handout.tar.gz: build/handout/

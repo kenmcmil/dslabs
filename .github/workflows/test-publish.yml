@@ -34,7 +34,7 @@ jobs:
 
   publish:
     needs: test
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'emichael/dslabs' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'kenmcmil/dslabs' }}
     name: Publish handout
     runs-on: ubuntu-latest
     concurrency: publish-handout

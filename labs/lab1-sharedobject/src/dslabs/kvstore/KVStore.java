@@ -61,34 +61,23 @@ public class KVStore implements Application {
         @NonNull private final String value;
     }
 
-    HashMap<String, String> mem = new HashMap<String,String>();
+    // your code here ...
 
     @Override
     public KVStoreResult execute(Command command) {
         if (command instanceof Get) {
             Get g = (Get) command;
-            if (mem.containsKey(g.key)) {
-                return new GetResult(mem.get(g.key));
-            } else {
-                return new KeyNotFound();
-            }
+            // your code here ...
         }
 
         if (command instanceof Put) {
             Put p = (Put) command;
-            mem.put(p.key,p.value);
-            return new PutOk();
+            // your code here ...
         }
 
         if (command instanceof Append) {
             Append a = (Append) command;
-            String val = "";
-            if (mem.containsKey(a.key)) {
-                val = mem.get(a.key);
-            }
-            val += a.value;
-            mem.put(a.key,val);
-            return new AppendResult(val);
+            // your code here ...
         }
 
         throw new IllegalArgumentException();

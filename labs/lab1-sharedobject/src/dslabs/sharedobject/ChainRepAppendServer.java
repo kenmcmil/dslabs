@@ -4,6 +4,8 @@ import dslabs.framework.Address;
 import dslabs.framework.Node;
 import dslabs.framework.Command;
 import dslabs.framework.Result;
+import dslabs.framework.Application;
+import dslabs.kvstore.KVStore;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import java.util.ArrayList;
@@ -58,7 +60,7 @@ Questions to think about:
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ChainRepAppendServer extends Node {
-    private final AppendApplication app = new AppendApplication();
+    private final Application app = new KVStore();
     private ArrayList<Address> servers;
     private int myIndex;
     

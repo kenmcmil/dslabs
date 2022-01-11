@@ -376,4 +376,9 @@ public class RunState extends AbstractState {
     @Override
     protected void ensureNodeConfig(Address address) {
     }
+
+    public int numMessagesSentTo(Address address) {
+        return network.numMessagesSentTo(address);
+    }
+
 }

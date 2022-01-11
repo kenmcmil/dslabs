@@ -39,7 +39,7 @@ import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class ChainRepAppendTest extends BaseJUnitTest {
 
-    private static final int numServers = 3;
+    private static final int numServers = 2;
     private static final ArrayList<Address> servers, clients;
     private static final HashMap<Address,Address> clientServer;
 
@@ -94,7 +94,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Single client ping test")
+    @PrettyTestName("Short test sequence.")
     @Category({RunTests.class})
     public void test01BasicAppend() throws InterruptedException {
 
@@ -122,7 +122,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
         runState.run(runSettings);
     }
 
-    @org.junit.Test(timeout = 20 * 1000)
+    @org.junit.Test(timeout = 180 * 1000)
     @PrettyTestName("Check eventual consistency")
     @Category(SearchTests.class)
     public void test02BasicAppend() throws InterruptedException {
@@ -134,10 +134,12 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                                    if (s.clientWorker(client(i)).results().size() == 0)
                                        continue;
                                    for (int j = i+1; j < numServers; j++) {
+                                       if (s.clientWorker(client(j)).results().size() == 0)
+                                           continue;
                                        Result r0 = Iterables.getLast(s.clientWorker(client(i)).results());
                                        Result r1 = Iterables.getLast(s.clientWorker(client(j)).results());
                                        if (!( !(r0 instanceof ShowResult) || !(r1 instanceof ShowResult)
-                                             || ((ShowResult)r0).value().length() < 4 || ((ShowResult)r0).value().length() < 4 ||
+                                             || ((ShowResult)r0).value().length() < numServers*2 || ((ShowResult)r1).value().length() < numServers*2 ||
                                               r0.equals(r1)))
                                            return false;
                                    }
@@ -154,12 +156,63 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
         }
         for (int i = 0; i < numServers; i++) 
             initSearchState.clientWorker(client(i)).addCommand(new Show(), new ShowResult(""));
-        searchSettings.addInvariant(showResultsMatch);
+        searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
         bfs(initSearchState);
         assertSpaceExhausted();
     }
 
+    @org.junit.Test(timeout = 20 * 1000)
+    @PrettyTestName("Do not send too many messages for read-only commands.")
+    @Category({RunTests.class})
+    public void test03OneServerMessagePerShow() throws InterruptedException {
 
+        StatePredicate oneServerMessagePerShow =
+            statePredicate("At most one message to server per read-only command",
+                           s -> {
+                               int ms = 0;
+                               for (int i = 0; i < numServers; i++)
+                                   ms += ((RunState)s).numMessagesSentTo(servers.get(i));
+                               return ms <= 2 * servers.size();
+                           });
+        
+        for (int i = 0; i < numServers; i++) 
+            runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < numServers; j++) {
+                runState.clientWorker(client(j)).addCommand(new Show(),new ShowResult(""));
+            }
+        }
+        runSettings.addInvariant(oneServerMessagePerShow);
+        runState.run(runSettings);
+    }
+
+    @org.junit.Test(timeout = 20 * 1000)
+    @PrettyTestName("Do not send multiple replies to clients.")
+    @Category({RunTests.class})
+    public void test04OneReplyPerRequest() throws InterruptedException {
+
+        StatePredicate oneReplyPerRequest =
+            statePredicate("At most one reply to client per command",
+                           s -> {
+                               int ms = 0;
+                               for (int i = 0; i < numServers; i++)
+                                   ms += ((RunState)s).numMessagesSentTo(client(i));
+                               return ms <= 2 * numServers;
+                           });
+        
+        for (int i = 0; i < numServers; i++) 
+            runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+
+        for (int j = 0; j < numServers; j++) {
+            runState.clientWorker(client(j)).addCommand(new Append(String.valueOf(j)),new AppendResult());
+        }
+        for (int j = 0; j < numServers; j++) {
+            runState.clientWorker(client(j)).addCommand(new Show(),new ShowResult(""));
+        }
+        runSettings.addInvariant(oneReplyPerRequest);
+        runState.run(runSettings);
+    }
 
     
     /*    @Test(timeout = 5 * 1000)

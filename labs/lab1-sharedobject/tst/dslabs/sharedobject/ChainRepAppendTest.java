@@ -18,10 +18,10 @@ import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.SerializableFunction;
 import dslabs.framework.testing.StatePredicate;
 import static dslabs.framework.testing.StatePredicate.statePredicate;
-import dslabs.sharedobject.AppendApplication.Append;
-import dslabs.sharedobject.AppendApplication.AppendResult;
-import dslabs.sharedobject.AppendApplication.Show;
-import dslabs.sharedobject.AppendApplication.ShowResult;
+import dslabs.kvstore.KVStore.Append;
+import dslabs.kvstore.KVStore.AppendResult;
+import dslabs.kvstore.KVStore.Get;
+import dslabs.kvstore.KVStore.GetResult;
 import java.util.Objects;
 import lombok.NonNull;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -60,8 +60,8 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
         public Pair<Command, Result> apply(
                 @NonNull Pair<String, String> commandAndResultString) {
             return new ImmutablePair<>(
-                    new Append(commandAndResultString.getValue()),
-                    new AppendResult());
+                    new Append("key",commandAndResultString.getValue()),
+                    new AppendResult(""));
         }
     }
 
@@ -103,7 +103,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                            s -> {
                                Result r0 = Iterables.getLast(s.clientWorker(client(0)).results());
                                Result r1 = Iterables.getLast(s.clientWorker(client(1)).results());
-                               return !(r0 instanceof ShowResult) || !(r0 instanceof ShowResult) || r0.equals(r1);
+                               return !(r0 instanceof GetResult) || !(r0 instanceof GetResult) || r0.equals(r1);
                            });
         
         for (int i = 0; i < numServers; i++) 
@@ -111,12 +111,12 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                runState.clientWorker(client(j)).addCommand(new Append(String.valueOf(j)),new AppendResult());
+                runState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
             }
         }
         runState.run(runSettings);
         for (int i = 0; i < numServers; i++) {
-            runState.clientWorker(client(i)).addCommand(new Show(), new ShowResult(""));
+            runState.clientWorker(client(i)).addCommand(new Get("key"), new GetResult(""));
         }
         runSettings.addInvariant(showResultsMatch);
         runState.run(runSettings);
@@ -138,8 +138,8 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                                            continue;
                                        Result r0 = Iterables.getLast(s.clientWorker(client(i)).results());
                                        Result r1 = Iterables.getLast(s.clientWorker(client(j)).results());
-                                       if (!( !(r0 instanceof ShowResult) || !(r1 instanceof ShowResult)
-                                             || ((ShowResult)r0).value().length() < numServers*2 || ((ShowResult)r1).value().length() < numServers*2 ||
+                                       if (!( !(r0 instanceof GetResult) || !(r1 instanceof GetResult)
+                                             || ((GetResult)r0).value().length() < numServers*2 || ((GetResult)r1).value().length() < numServers*2 ||
                                               r0.equals(r1)))
                                            return false;
                                    }
@@ -151,11 +151,11 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
             initSearchState.addClientWorker(client(i), Workload.emptyWorkload(), true);
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                initSearchState.clientWorker(client(j)).addCommand(new Append(String.valueOf(j)),new AppendResult());
+                initSearchState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
             }
         }
         for (int i = 0; i < numServers; i++) 
-            initSearchState.clientWorker(client(i)).addCommand(new Show(), new ShowResult(""));
+            initSearchState.clientWorker(client(i)).addCommand(new Get("key"), new GetResult(""));
         searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
         bfs(initSearchState);
         assertSpaceExhausted();
@@ -164,9 +164,9 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send too many messages for read-only commands.")
     @Category({RunTests.class})
-    public void test03OneServerMessagePerShow() throws InterruptedException {
+    public void test03OneServerMessagePerGet() throws InterruptedException {
 
-        StatePredicate oneServerMessagePerShow =
+        StatePredicate oneServerMessagePerGet =
             statePredicate("At most one message to server per read-only command",
                            s -> {
                                int ms = 0;
@@ -180,10 +180,10 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                runState.clientWorker(client(j)).addCommand(new Show(),new ShowResult(""));
+                runState.clientWorker(client(j)).addCommand(new Get("key"),new GetResult(""));
             }
         }
-        runSettings.addInvariant(oneServerMessagePerShow);
+        runSettings.addInvariant(oneServerMessagePerGet);
         runState.run(runSettings);
     }
 
@@ -205,10 +205,10 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
             runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
 
         for (int j = 0; j < numServers; j++) {
-            runState.clientWorker(client(j)).addCommand(new Append(String.valueOf(j)),new AppendResult());
+            runState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
         }
         for (int j = 0; j < numServers; j++) {
-            runState.clientWorker(client(j)).addCommand(new Show(),new ShowResult(""));
+            runState.clientWorker(client(j)).addCommand(new Get("key"),new GetResult(""));
         }
         runSettings.addInvariant(oneReplyPerRequest);
         runState.run(runSettings);

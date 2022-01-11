@@ -22,6 +22,10 @@ public class AppendApplication implements Application {
 
     @Data
     public static final class Show implements Command {
+        @Override
+        public boolean readOnly() {
+            return true;
+        }
     }
 
     @Data

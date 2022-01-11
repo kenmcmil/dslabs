@@ -60,20 +60,24 @@ Questions to think about:
 public class ChainRepAppendServer extends Node {
     private final AppendApplication app = new AppendApplication();
     private ArrayList<Address> servers;
-    private Address client;
-    private Reply reply;
+    private int myIndex;
     
     /* -------------------------------------------------------------------------
         Construction and Initialization.
 
-        The 'self' parameter gives the number of the server in the
-        chain (starting with zero). The address of server number n in the
-        chain can be obtained as server(n). 
+        The 'servers' parameter gives the address of all of the
+        servers in the chain (starting with zero). The address of
+        server number n in the chain can be obtained as
+        servers.get(n). Our own index in the chain is stored in
+        'myIndex'.
         
        -----------------------------------------------------------------------*/
     public ChainRepAppendServer(Address address, ArrayList<Address> servers) {
         super(address);
         this.servers = servers;
+        for (int i = 0; i < servers.size(); i++)
+            if (address().equals(servers.get(i)))
+                this.myIndex = i;
     }
 
     @Override
@@ -85,13 +89,15 @@ public class ChainRepAppendServer extends Node {
         Message Handlers
        -----------------------------------------------------------------------*/
     private void handleRequest(Request m, Address sender) {
-        /* TODO: handle request from a client here */
         if (m.command().readOnly()) {
-            /* TODO: Handle read-only queries (i.e., Show) here. */
+            /* TODO: Handle read-only queries locally. */
         } else {
-            /* TODO: Handle updates (i.e., Append) here. */
+            /* TODO: Handle updates here by forwarding to primary server */
         }
     }
 
-    /* TODO: handle messages from other servers here. */
+    private void handleServerRequest(Request m, Address sender) {
+        /* TODO: handle requests from other servers here. */
+    }
+
 }

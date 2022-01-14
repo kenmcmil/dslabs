@@ -310,8 +310,13 @@ public class VizClient {
     }
 
     public static void main(String[] args) throws Exception {
-        int labNum = Integer.parseInt(args[0]);
-        String className = "dslabs.vizconfigs.Lab" + labNum + "VizConfig";
+        String className;
+        if (Character.isDigit(args[0].charAt(0))) {
+            int labNum = Integer.parseInt(args[0]);
+            className = "dslabs.vizconfigs.Lab" + labNum + "VizConfig";
+        } else {
+            className = args[0] + ".VizConfig";
+        }
         VizConfig config =
                 (VizConfig) Class.forName(className).getDeclaredConstructor()
                                  .newInstance();

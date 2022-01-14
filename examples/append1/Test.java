@@ -30,13 +30,17 @@ import org.junit.FixMethodOrder;
 //import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
+import java.util.Arrays;
+import java.util.List;
 
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class Test extends BaseJUnitTest {
+    static final List<Address> sas = Arrays.asList(server(1),server(2));
 
+    
     private static final class AppendParser implements
             SerializableFunction<Pair<String, String>, Pair<Command, Result>> {
         @Override
@@ -56,8 +60,8 @@ public final class Test extends BaseJUnitTest {
 
     static StateGeneratorBuilder builder() {
         StateGeneratorBuilder builder = StateGenerator.builder();
-        builder.serverSupplier(a -> new AppendServer(a,a.equals(server(0)) ? server(1) : server(0)));
-        builder.clientSupplier(a -> new AppendClient(a,a.equals(client(0)) ? server(0) : server(1)));
+        builder.serverSupplier(a -> new AppendServer(a,a.equals(server(1)) ? server(2) : server(1)));
+        builder.clientSupplier(a -> new AppendClient(a,a.equals(client(1)) ? server(1) : server(2)));
         builder.workloadSupplier(Workload.emptyWorkload());
         return builder;
     }
@@ -65,15 +69,15 @@ public final class Test extends BaseJUnitTest {
     @Override
     protected void setupRunTest() {
         runState = new RunState(builder().build());
-        runState.addServer(server(0));
         runState.addServer(server(1));
+        runState.addServer(server(2));
     }
 
     @Override
     protected void setupSearchTest() {
         initSearchState = new SearchState(builder().build(),true);
-        initSearchState.addServer(server(0));
         initSearchState.addServer(server(1));
+        initSearchState.addServer(server(2));
     }
 
     @org.junit.Test(timeout = 20 * 1000)
@@ -84,20 +88,20 @@ public final class Test extends BaseJUnitTest {
         StatePredicate showResultsMatch =
             statePredicate("After updates, server contents match",
                            s -> {
-                               Result r0 = Iterables.getLast(s.clientWorker(client(0)).results());
-                               Result r1 = Iterables.getLast(s.clientWorker(client(1)).results());
+                               Result r0 = Iterables.getLast(s.clientWorker(client(1)).results());
+                               Result r1 = Iterables.getLast(s.clientWorker(client(2)).results());
                                return !(r0 instanceof ShowResult) || !(r0 instanceof ShowResult) || r0.equals(r1);
                            });
         
-        runState.addClientWorker(client(0), Workload.emptyWorkload(), true);
         runState.addClientWorker(client(1), Workload.emptyWorkload(), true);
+        runState.addClientWorker(client(2), Workload.emptyWorkload(), true);
         for (int i = 0; i < 2; i++) {
-            runState.clientWorker(client(0)).addCommand(new Append("0"),new AppendResult());
-            runState.clientWorker(client(1)).addCommand(new Append("1"),new AppendResult());
+            runState.clientWorker(client(1)).addCommand(new Append("0"),new AppendResult());
+            runState.clientWorker(client(2)).addCommand(new Append("1"),new AppendResult());
         }
         runState.run(runSettings);
-        runState.clientWorker(client(0)).addCommand(new Show(), new ShowResult("0101"));
-        runState.clientWorker(client(1)).addCommand(new Show(), new ShowResult("1010"));
+        runState.clientWorker(client(1)).addCommand(new Show(), new ShowResult("0101"));
+        runState.clientWorker(client(2)).addCommand(new Show(), new ShowResult("1010"));
         runSettings.addInvariant(showResultsMatch);
         runState.run(runSettings);
     }
@@ -110,24 +114,24 @@ public final class Test extends BaseJUnitTest {
         StatePredicate showResultsMatch =
             statePredicate("Eventual consisency",
                            s -> {
-                               if (s.clientWorker(client(0)).results().size() == 0 ||
-                                   s.clientWorker(client(1)).results().size() == 0)
+                               if (s.clientWorker(client(1)).results().size() == 0 ||
+                                   s.clientWorker(client(2)).results().size() == 0)
                                    return true;
-                               Result r0 = Iterables.getLast(s.clientWorker(client(0)).results());
-                               Result r1 = Iterables.getLast(s.clientWorker(client(1)).results());
+                               Result r0 = Iterables.getLast(s.clientWorker(client(1)).results());
+                               Result r1 = Iterables.getLast(s.clientWorker(client(2)).results());
                                return !(r0 instanceof ShowResult) || !(r1 instanceof ShowResult)
-                                   || ((ShowResult)r0).value().length() < 4 || ((ShowResult)r0).value().length() < 4 ||
+                                   || ((ShowResult)r0).value().length() < 2 || ((ShowResult)r0).value().length() < 2 ||
                                    r0.equals(r1);
                            });
         
-        initSearchState.addClientWorker(client(0), Workload.emptyWorkload(), true);
         initSearchState.addClientWorker(client(1), Workload.emptyWorkload(), true);
-        for (int i = 0; i < 2; i++) {
-            initSearchState.clientWorker(client(0)).addCommand(new Append("0"),new AppendResult());
-            initSearchState.clientWorker(client(1)).addCommand(new Append("1"),new AppendResult());
+        initSearchState.addClientWorker(client(2), Workload.emptyWorkload(), true);
+        for (int i = 0; i < 1; i++) {
+            initSearchState.clientWorker(client(1)).addCommand(new Append("0"),new AppendResult());
+            initSearchState.clientWorker(client(2)).addCommand(new Append("1"),new AppendResult());
         }
-        initSearchState.clientWorker(client(0)).addCommand(new Show(), new ShowResult("01"));
-        initSearchState.clientWorker(client(1)).addCommand(new Show(), new ShowResult("10"));
+        initSearchState.clientWorker(client(1)).addCommand(new Show(), new ShowResult("01"));
+        initSearchState.clientWorker(client(2)).addCommand(new Show(), new ShowResult("10"));
         searchSettings.addInvariant(showResultsMatch);
         bfs(initSearchState);
         assertSpaceExhausted();

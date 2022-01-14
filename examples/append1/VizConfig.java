@@ -1,5 +1,6 @@
 package append1;
 
+import dslabs.framework.Address;
 import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static append1.Test.builder;
+//import static append1.Test.sas;
 
 public class VizConfig extends dslabs.framework.testing.visualization.VizConfig {
     @Override
@@ -17,6 +19,9 @@ public class VizConfig extends dslabs.framework.testing.visualization.VizConfig 
                                        List<String> commands) {
         SearchState searchState =
                 super.getInitialState(0, numClients, commands);
+        for (Address sa : Test.sas) {
+            searchState.addServer(sa);
+        }
         return searchState;
     }
 

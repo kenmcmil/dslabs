@@ -138,7 +138,8 @@ public abstract class Node implements Serializable {
      * Takes any initialization steps necessary (potentially sending {@link
      * Message}s and setting {@link Timer}s).
      */
-    public abstract void init();
+    public void init() {
+    }
 
     /**
      * Adds a sub-Node to this Node's hierarchy. The address of the sub-Node

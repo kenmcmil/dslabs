@@ -71,6 +71,7 @@ public abstract class Json {
 
     private static final BiMap<MessageEnvelope, String> messageIDs =
             HashBiMap.create();
+    private static int messageIDcount = 0;
     private static final BiMap<TimerEnvelope, String> timerIDs =
             HashBiMap.create();
     private static final BiMap<SearchState, String> stateIDs =
@@ -102,9 +103,13 @@ public abstract class Json {
 
     public static String getMessageId(MessageEnvelope me) {
         if (!messageIDs.containsKey(me)) {
-            messageIDs.put(me, MESSAGE_PREFIX + messageIDs.size());
+            messageIDs.put(me, MESSAGE_PREFIX + (messageIDcount++));
         }
         return messageIDs.get(me);
+    }
+
+    public static void dropMessageId(MessageEnvelope me) {
+        messageIDs.remove(me);
     }
 
     public static MessageEnvelope getMessage(String id) {
@@ -212,6 +217,8 @@ class SingleStateSerializer extends JsonSerializer<SearchState> {
         if (s.previousEvent() != null && s.previousEvent().isMessage()) {
             gen.writeFieldName("deliver-message");
             serializeMessage(s.previousEvent().message(), gen, ser);
+            if (s.ordered())
+                Json.dropMessageId(s.previousEvent().message());
 
         } else if (s.previousEvent() != null && s.previousEvent().isTimer()) {
             TimerEnvelope te = s.previousEvent().timer();

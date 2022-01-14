@@ -4,13 +4,14 @@ Labs](http://nil.csail.mit.edu/6.824/2015/labs/lab-2.html)*
 
 
 ## Introduction
-In the previous lab, you guaranteed exactly-once execution of RPCs despite
-unreliable network conditions. Your server maintained state, but it was not
-fault-tolerant. Lab 2 is a first step towards fault tolerance for services with
-state.
 
+In the previous lab, our system was not fault-tolerant. We dealt with
+the problems of asynchrony, but we assumed reliability of all
+components of the system including the network. In this lab we take a
+first step towards tolerating faults in both the network and the servers.
 
 ### Road Map for Labs 2-4
+
 In the next 3 labs you will build several systems for replicating stateful
 services. The labs differ in the degree of fault tolerance and performance they
 provide:
@@ -41,6 +42,101 @@ future labs; careful thought and planning may help you avoid too many re-design
 cycles. We don't give you a description of the test cases (other than the code);
 in the real world, you would have to come up with them yourself.
 
+### Assumptions and guarantees for labs 2-4
+
+From this point on, we will assume:
+
+- Full asynchrony (i.e., message delivery times and compute times are unbounded).
+
+- The network may drop, duplicate and re-order messages, but it may
+not corrupt messages. Moreover, if node A continues to send messages
+to node B, eventually node B will receive a message from node A.
+
+- Servers may fail, but only by stopping.
+
+We will guarantee linearizability, a much stronger consistency
+condition than eventual consistency. 
+
+### Dealing with network failures
+
+The first issue we have to deal with is loss of messages in the
+network. Because we are in an asynchronous environment, we can never
+be sure that a message has been lost. It's always possible that
+delivery of the message is just slow and the message will eventually
+arrive. This produces a dilemma for clients. Suppose a certain amount
+of time has passed after sending a request and the client has not
+received a response.  The client may *suspect* that either the request
+or the response was dropped and thus be tempted to resend the
+request. However, this is dangerous, since the following two scenarios
+are possible:
+
+- The request is merely delayed and it will eventually be received, perhaps far in the future, or
+- The request was received and executed, but the response is delayed.
+
+It is therefore possible that the request will be executed twice, or
+that multiple responses will be received for the same
+request. Moreover, it is also possible for the network to duplicate
+request and response messages.
+
+For these reasons, we want to make sure the both the request and
+response messages are *idempotent*. This means that receiving a
+message a second time has no effect that is observable to users.
+
+A simple way to achieve idempotence is to use *sequence numbers* in
+the requests and responses. This is similar to the TCP transport
+protocol, but a little simpler, since we can assume there is only one
+outstanding message at a time. We use the following protocol:
+
+#### Adding sequence numbers to commands
+
+Each command issued by the user is given the next available sequence
+number, starting from zero. This makes it easy for the receiver of a
+request or response message to detect whether it is a duplicate. Each
+client issues only one outstanding request at a time (in other words,
+the clients perform requests *sequentially*). Don't worry that the
+sequence numbers may overflow. We can always use a number format wide
+enough that sequence numbers will never overflow in practice (say, 128
+bits).
+
+#### The server response
+
+A server receiving a request message checks that its sequence number
+is the next expected number. If so, it executes the request and sends
+a response with the same sequence number.  The server also caches the
+most recent response to each client, to allow for the possibility that
+the response was dropped. If the server receives a request with the
+most recent sequence number, it does not execute the command, but
+instead responds with the cached value. If it receives an earlier
+sequence number it simply drops the request. Because of sequential
+execution, the response to this request must have been received.
+
+#### Handling timeouts
+
+When the client sends a request, it sets a timer. If the timer expires
+before receiving the matching response, the client resends the request message.
+
+#### Implementation
+
+We will implement the sequence number protocol only in client and the
+application, in a way that is transparent to the server. To get the implementation,
+download the file `atmostonce.tgz` from Canvas, and unpack it like this in the
+main `dslabs` directory:
+
+    $ tar xzf atmostonce.tgz
+
+The implementation has two main parts:
+
+- A specialized Client node class called `AMOClient`. Subclass this
+  class to create a client that uses sequence numbers.
+
+- An application wrapper class `AMOApplication`. Wrap the application
+  in an `AMOApplication` instance to create an application that uses
+  sequence numbers.
+
+Have a look at the implementation of these classes in
+`labs/lab2-primarybackup/src/dslabs/atmostonce`. You're getting this
+code for free, even though its a lab exercise in the original DSLabs
+framework, so please don't post this code on the Internet!
 
 ### Overview of Lab 2
 In this lab you'll make a fault-tolerant service using a form of primary/backup

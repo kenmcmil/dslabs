@@ -1,6 +1,6 @@
 # Lab 1
 
-In this lab, we will performs operations on a shared object. That is,
+In this lab, we will perform operations on a shared object. That is,
 two or more users who are far apart want to edit a shared
 database. All of the users would like to see the results of their own
 updates right away, despite delays in the network. It's OK for users
@@ -30,7 +30,7 @@ The `Put` and `Appends` are updates to the database, while `Get` is a
 read-only query. You can tell if a command is read-only using the
 `readOnly()` property.
 
-The key/value store is implemented in a subclass of  `Application` called `KVStore`. You can get `KVStore` by downloading `kvstore.tgz` from the Fies page on  Canvas and runngin this command in the handout directory (`dslabs`):
+The key/value store is implemented in a subclass of  `Application` called `KVStore`. You can get `KVStore` by downloading `kvstore.tgz` from the Files page on Canvas and running this command in the handout directory (`dslabs`):
 
     $ tar xzf kvstore.tgz
 
@@ -64,7 +64,7 @@ This will check that:
 
 - Your server is live (i.e., it completes all client requests, assuming a reliable ordered network)
 - It satisfies eventual consistency
-- `Get` operations are not forwared
+- `Get` operations are not forwarded
 - The servers don't return more than one `Reply` for a given command.
 
 Questions to think about:
@@ -72,7 +72,7 @@ Questions to think about:
 - What determines the update order in this algorithm?
 - When is it safe to reply to an append request? 
 - Does this algorithm have disadvantages from a user point of view?
-- Suppose the network is temporarily paritioned? Can users still work?
+- Suppose the network is temporarily partitioned? Can users still work?
 - What assumptions on the network are needed? Why?
 
 ## Part 2
@@ -96,7 +96,7 @@ program. To test it, use this command:
 
 Question to think about:
 - In what way is part 2 an improvement on part 1?
-- Suppose the network is temporarily paritioned? Can users still work?
+- Suppose the network is temporarily partitioned? Can users still work?
 
 ## Part 3
 
@@ -104,7 +104,7 @@ In part 3, we will use scalar clocks to maintain eventual
 consistency for all the `KVStore` commands including `Append`. The
 difference from part 2 is that now the final value depends on *all* of
 the appends performed (whereas `Put` only, the *last* `Put`
-determinse the value of a key).
+determines the value of a key).
 
 Use the scalar clocks to make sure that the Append operations are
 performed in the same order on all of the servers without forwarding

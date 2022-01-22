@@ -157,7 +157,7 @@ public abstract class AbstractState implements Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    protected synchronized <C extends Node & Client> C client(Address address) {
+    public synchronized <C extends Node & Client> C client(Address address) {
         return (C) clients.get(address);
     }
 

@@ -39,18 +39,18 @@ import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class ChainRepAppendTest extends BaseJUnitTest {
 
-    private static final int numServers = 2;
-    private static final ArrayList<Address> servers, clients;
-    private static final HashMap<Address,Address> clientServer;
+    public static final int numServers = 2;
+    public static final ArrayList<Address> servers, clients;
+    public static final HashMap<Address,Address> clientServer;
 
     static {
         servers = new ArrayList<Address>(); 
         clients = new ArrayList<Address>(); 
         clientServer = new HashMap<Address,Address>();
         for (int i = 0; i < numServers; i++) {
-            servers.add(server(i));
-            clients.add(client(i));
-            clientServer.put(client(i),server(i));
+            servers.add(server(i+1));
+            clients.add(client(i+1));
+            clientServer.put(client(i+1),server(i+1));
         }
     }
     
@@ -83,14 +83,14 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     protected void setupRunTest() {
         runState = new RunState(builder().build());
         for (int i = 0; i < numServers; i++)
-            runState.addServer(server(i));
+            runState.addServer(servers.get(i));
     }
 
     @Override
     protected void setupSearchTest() {
         initSearchState = new SearchState(builder().build(),true);
         for (int i = 0; i < numServers; i++)
-            initSearchState.addServer(server(i));
+            initSearchState.addServer(servers.get(i));
     }
 
     @org.junit.Test(timeout = 20 * 1000)
@@ -101,22 +101,22 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
         StatePredicate showResultsMatch =
             statePredicate("After updates, server contents match",
                            s -> {
-                               Result r0 = Iterables.getLast(s.clientWorker(client(0)).results());
-                               Result r1 = Iterables.getLast(s.clientWorker(client(1)).results());
+                               Result r0 = Iterables.getLast(s.clientWorker(clients.get(0)).results());
+                               Result r1 = Iterables.getLast(s.clientWorker(clients.get(1)).results());
                                return !(r0 instanceof GetResult) || !(r0 instanceof GetResult) || r0.equals(r1);
                            });
         
         for (int i = 0; i < numServers; i++) 
-            runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+            runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                runState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+                runState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
             }
         }
         runState.run(runSettings);
         for (int i = 0; i < numServers; i++) {
-            runState.clientWorker(client(i)).addCommand(new Get("key"), new GetResult(""));
+            runState.clientWorker(clients.get(i)).addCommand(new Get("key"), new GetResult(""));
         }
         runSettings.addInvariant(showResultsMatch);
         runState.run(runSettings);
@@ -131,13 +131,13 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
             statePredicate("Eventual consisency",
                            s -> {
                                for (int i = 0; i < numServers; i++) {
-                                   if (s.clientWorker(client(i)).results().size() == 0)
+                                   if (s.clientWorker(clients.get(i)).results().size() == 0)
                                        continue;
                                    for (int j = i+1; j < numServers; j++) {
-                                       if (s.clientWorker(client(j)).results().size() == 0)
+                                       if (s.clientWorker(clients.get(j)).results().size() == 0)
                                            continue;
-                                       Result r0 = Iterables.getLast(s.clientWorker(client(i)).results());
-                                       Result r1 = Iterables.getLast(s.clientWorker(client(j)).results());
+                                       Result r0 = Iterables.getLast(s.clientWorker(clients.get(i)).results());
+                                       Result r1 = Iterables.getLast(s.clientWorker(clients.get(j)).results());
                                        if (!( !(r0 instanceof GetResult) || !(r1 instanceof GetResult)
                                              || ((GetResult)r0).value().length() < numServers*2 || ((GetResult)r1).value().length() < numServers*2 ||
                                               r0.equals(r1)))
@@ -148,14 +148,14 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                            });
         
         for (int i = 0; i < numServers; i++) 
-            initSearchState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+            initSearchState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                initSearchState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+                initSearchState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
             }
         }
         for (int i = 0; i < numServers; i++) 
-            initSearchState.clientWorker(client(i)).addCommand(new Get("key"), new GetResult(""));
+            initSearchState.clientWorker(clients.get(i)).addCommand(new Get("key"), new GetResult(""));
         searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
         bfs(initSearchState);
         assertSpaceExhausted();
@@ -176,11 +176,11 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                            });
         
         for (int i = 0; i < numServers; i++) 
-            runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+            runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                runState.clientWorker(client(j)).addCommand(new Get("key"),new GetResult(""));
+                runState.clientWorker(clients.get(j)).addCommand(new Get("key"),new GetResult(""));
             }
         }
         runSettings.addInvariant(oneServerMessagePerGet);
@@ -197,18 +197,18 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                            s -> {
                                int ms = 0;
                                for (int i = 0; i < numServers; i++)
-                                   ms += ((RunState)s).numMessagesSentTo(client(i));
+                                   ms += ((RunState)s).numMessagesSentTo(clients.get(i));
                                return ms <= 2 * numServers;
                            });
         
         for (int i = 0; i < numServers; i++) 
-            runState.addClientWorker(client(i), Workload.emptyWorkload(), true);
+            runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
 
         for (int j = 0; j < numServers; j++) {
-            runState.clientWorker(client(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+            runState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
         }
         for (int j = 0; j < numServers; j++) {
-            runState.clientWorker(client(j)).addCommand(new Get("key"),new GetResult(""));
+            runState.clientWorker(clients.get(j)).addCommand(new Get("key"),new GetResult(""));
         }
         runSettings.addInvariant(oneReplyPerRequest);
         runState.run(runSettings);
@@ -224,7 +224,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
                                     .resultStrings("hello from %a").build();
 
         for (int i = 1; i <= 2; i++) {
-            runState.addClientWorker(client(i), workload);
+            runState.addClientWorker(clients.get(i), workload);
         }
 
         runSettings.addInvariant(RESULTS_OK);
@@ -235,7 +235,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @PrettyTestName("Client can still ping if some messages are dropped")
     @Category({RunTests.class, UnreliableTests.class})
     public void test03MessagesDropped() throws InterruptedException {
-        runState.addClientWorker(client(1), repeatedAppends(100));
+        runState.addClientWorker(clients.get(1), repeatedAppends(100));
 
         runSettings.networkUnreliable(true);
 
@@ -247,7 +247,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @PrettyTestName("Single client repeatedly pings")
     @Category(SearchTests.class)
     public void test04AppendSearch() throws InterruptedException {
-        initSearchState.addClientWorker(client(1), repeatedAppends(10));
+        initSearchState.addClientWorker(clients.get(1), repeatedAppends(10));
 
         System.out.println("Checking that the client can finish all pings");
         searchSettings.addInvariant(RESULTS_OK).addGoal(CLIENTS_DONE)

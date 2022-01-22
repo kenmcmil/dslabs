@@ -1,6 +1,7 @@
 package dslabs.vizconfigs;
 
 import dslabs.framework.Command;
+import dslabs.framework.Address;
 import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
@@ -22,6 +23,9 @@ public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizCon
                                        List<String> commands) {
         SearchState searchState =
                 super.getInitialState(0, numClients, commands);
+        for (Address sa : dslabs.sharedobject.ChainRepAppendTest.servers) {
+            searchState.addServer(sa);
+        }
         return searchState;
     }
 

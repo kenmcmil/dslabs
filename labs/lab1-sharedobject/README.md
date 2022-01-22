@@ -32,8 +32,9 @@ read-only query. You can tell if a command is read-only using the
 
 The key/value store is implemented in a subclass of  `Application` called `KVStore`. You can get `KVStore` by downloading `kvstore.tgz` from the Files page on Canvas and running this command in the handout directory (`dslabs`):
 
-    $ tar xzf kvstore.tgz
+    $ tar xzmf kvstore.tgz
 
+Notice the `m` option is needed to update the modification time so that `make` will recompile KVStore.java.
 The implementation of `KVStore` isn't on github because it is a
 solution to a lab assignment in the original version of DSLabs, but you're getting it for free!
 
@@ -58,7 +59,7 @@ program. Our implementation required seven additional lines of code.
 To test your implementation, use this command (in the main `dslabs`
 directory:
 
-   $ ./run-tests --lab 1 --part 1
+   $ ./run-tests.py --lab 1 --part 1
 
 This will check that:
 
@@ -92,7 +93,7 @@ waiting on messages from any other servers.
 Fill in the "TODO" regions in `ScalarClockPut.java` to complete the
 program. To test it, use this command:
 
-   $ ./run-tests --lab 1 --part 2
+   $ ./run-tests.py --lab 1 --part 2
 
 Question to think about:
 - In what way is part 2 an improvement on part 1?
@@ -119,7 +120,7 @@ logical times.
 Fill in the "TODO" regions in `ScalarClockAppend.java` to complete
 the program. To test it, use this command:
 
-   $ ./run-tests --lab 1 --part 3
+   $ ./run-tests.py --lab 1 --part 3
 
 Question to think about: Does part 3 have a higher message complexity
 than part 2? Notice how the performance of replication can depend on

@@ -52,7 +52,7 @@ public class ChainRepAppendServer extends Node {
         }
     }
 
-    private void handleServerRequest(Request m, Address sender) {
+    private void handleServerRequest(ServerRequest m, Address sender) {
         /* TODO: handle requests from other servers here. */
     }
 

@@ -233,7 +233,7 @@ public final class ClientWorker extends Node {
         }
     }
 
-    private Node clientNode() {
+    public Node clientNode() {
         return (Node) client;
     }
 

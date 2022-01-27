@@ -13,6 +13,7 @@ import dslabs.framework.testing.junit.PrettyTestName;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.junit.SearchTests;
 import dslabs.framework.testing.junit.UnreliableTests;
+import dslabs.framework.testing.junit.TestPointValue;
 import dslabs.framework.testing.runner.RunState;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.SerializableFunction;
@@ -96,6 +97,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Short test sequence.")
     @Category({RunTests.class})
+    @TestPointValue(15)
     public void test01BasicAppend() throws InterruptedException {
 
         StatePredicate showResultsMatch =
@@ -125,6 +127,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 180 * 1000)
     @PrettyTestName("Check eventual consistency")
     @Category(SearchTests.class)
+    @TestPointValue(15)
     public void test02BasicAppend() throws InterruptedException {
 
         StatePredicate showResultsMatch =
@@ -163,6 +166,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
 
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send too many messages for read-only commands.")
+    @TestPointValue(15)
     @Category({RunTests.class})
     public void test03OneServerMessagePerGet() throws InterruptedException {
 
@@ -190,6 +194,7 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send multiple replies to clients.")
     @Category({RunTests.class})
+    @TestPointValue(15)
     public void test04OneReplyPerRequest() throws InterruptedException {
 
         StatePredicate oneReplyPerRequest =

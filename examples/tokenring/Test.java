@@ -87,10 +87,11 @@ public final class Test extends BaseJUnitTest {
             statePredicate("Mutual Exclusion",
                            s -> {
                                for (int i = 1; i < 4; i++)
-                                   for (int j = i+1; i < 4; j++)
-                                       if (((TokenClient)s.client(client(i))).acquiredState
-                                           && ((TokenClient)s.client(client(i))).acquiredState)
+                                   for (int j = i+1; j < 4; j++) {
+                                       if (((TokenClient)s.clientWorker(client(i)).clientNode()).acquiredState
+                                           && ((TokenClient)s.clientWorker(client(j)).clientNode()).acquiredState)
                                            return false;
+                                   }
                                return true;
                            });
         
@@ -115,20 +116,20 @@ public final class Test extends BaseJUnitTest {
             statePredicate("Mutual Exclusion",
                            s -> {
                                for (int i = 1; i < 4; i++)
-                                   for (int j = i+1; i < 4; j++)
-                                       if (((TokenClient)s.client(client(i))).acquiredState
-                                           && ((TokenClient)s.client(client(i))).acquiredState)
+                                   for (int j = i+1; j < 4; j++)
+                                       if (((TokenClient)s.clientWorker(client(i)).clientNode()).acquiredState
+                                           && ((TokenClient)s.clientWorker(client(j)).clientNode()).acquiredState)
                                            return false;
                                return true;
                            });
         
-        initSearchState.addClientWorker(client(1), Workload.emptyWorkload(), true);
-        initSearchState.addClientWorker(client(2), Workload.emptyWorkload(), true);
-        initSearchState.addClientWorker(client(3), Workload.emptyWorkload(), true);
-        for (int i = 0; i < 1; i++) {
+        initSearchState.addClientWorker(client(1), Workload.emptyWorkload());
+        initSearchState.addClientWorker(client(2), Workload.emptyWorkload());
+        initSearchState.addClientWorker(client(3), Workload.emptyWorkload());
+        for (int i = 0; i < 2; i++) {
             initSearchState.clientWorker(client(1)).addCommand(new MutexCommand(),new MutexResult());
             initSearchState.clientWorker(client(2)).addCommand(new MutexCommand(),new MutexResult());
-            initSearchState.clientWorker(client(3)).addCommand(new MutexCommand(),new MutexResult());
+            //            initSearchState.clientWorker(client(3)).addCommand(new MutexCommand(),new MutexResult());
         }
         searchSettings.addInvariant(mutualExclusion);
         bfs(initSearchState);

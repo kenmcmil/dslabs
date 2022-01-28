@@ -152,6 +152,10 @@ public abstract class TestSettings<T extends TestSettings<T>> {
         }
     }
 
+    public final void setTimeLimit(int newMaxTimeSecs) {
+        maxTimeSecs = newMaxTimeSecs;
+    }
+
     public final boolean timeUp(long startTimeMillis) {
         return timeLimited() && System.currentTimeMillis() >
                 startTimeMillis + maxTimeSecs * 1000;

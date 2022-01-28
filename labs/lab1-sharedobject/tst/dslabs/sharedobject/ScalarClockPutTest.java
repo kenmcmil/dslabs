@@ -18,9 +18,10 @@ import dslabs.framework.testing.runner.RunState;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.SerializableFunction;
 import dslabs.framework.testing.StatePredicate;
+import dslabs.framework.testing.MessageEnvelope;
 import static dslabs.framework.testing.StatePredicate.statePredicate;
-import dslabs.kvstore.KVStore.Append;
-import dslabs.kvstore.KVStore.AppendResult;
+import dslabs.kvstore.KVStore.Put;
+import dslabs.kvstore.KVStore.PutOk;
 import dslabs.kvstore.KVStore.Get;
 import dslabs.kvstore.KVStore.GetResult;
 import java.util.Objects;
@@ -55,21 +56,21 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
         }
     }
     
-    private static final class AppendParser implements
+    private static final class PutParser implements
             SerializableFunction<Pair<String, String>, Pair<Command, Result>> {
         @Override
         public Pair<Command, Result> apply(
                 @NonNull Pair<String, String> commandAndResultString) {
             return new ImmutablePair<>(
-                    new Append("key",commandAndResultString.getValue()),
-                    new AppendResult(""));
+                    new Put("key",commandAndResultString.getValue()),
+                    new PutOk());
         }
     }
 
-    static Workload repeatedAppends(int numAppends) {
-        return Workload.builder().parser(new AppendParser())
+    static Workload repeatedPuts(int numPuts) {
+        return Workload.builder().parser(new PutParser())
                        .commandStrings("append-%i").resultStrings("result-%i")
-                       .numTimes(numAppends).build();
+                       .numTimes(numPuts).build();
     }
 
     public static StateGeneratorBuilder builder() {
@@ -97,8 +98,8 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Short test sequence.")
     @Category({RunTests.class})
-    @TestPointValue(15)
-    public void test01BasicAppend() throws InterruptedException {
+    @TestPointValue(10)
+    public void test01BasicPut() throws InterruptedException {
 
         StatePredicate showResultsMatch =
             statePredicate("After updates, server contents match",
@@ -113,13 +114,17 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
-                runState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+                runState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
             }
         }
+        runSettings.setTimeLimit(1);
+        runSettings.waitForClients(false);
         runState.run(runSettings);
         for (int i = 0; i < numServers; i++) {
             runState.clientWorker(clients.get(i)).addCommand(new Get("key"), new GetResult(""));
         }
+        runSettings.setTimeLimit(-1);
+        runSettings.waitForClients(true);
         runSettings.addInvariant(showResultsMatch);
         runState.run(runSettings);
     }
@@ -127,38 +132,37 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 180 * 1000)
     @PrettyTestName("Check eventual consistency")
     @Category(SearchTests.class)
-    @TestPointValue(15)
-    public void test02BasicAppend() throws InterruptedException {
+    @TestPointValue(10)
+    public void test02BasicPut() throws InterruptedException {
 
         StatePredicate showResultsMatch =
-            statePredicate("Eventual consisency",
+            statePredicate("Replicas consistent when network quiescent",
                            s -> {
-                               for (int i = 0; i < numServers; i++) {
-                                   if (s.clientWorker(clients.get(i)).results().size() == 0)
-                                       continue;
-                                   for (int j = i+1; j < numServers; j++) {
-                                       if (s.clientWorker(clients.get(j)).results().size() == 0)
-                                           continue;
-                                       Result r0 = Iterables.getLast(s.clientWorker(clients.get(i)).results());
-                                       Result r1 = Iterables.getLast(s.clientWorker(clients.get(j)).results());
-                                       if (!( !(r0 instanceof GetResult) || !(r1 instanceof GetResult)
-                                             || ((GetResult)r0).value().length() < numServers*2 || ((GetResult)r1).value().length() < numServers*2 ||
-                                              r0.equals(r1)))
-                                           return false;
+                               Command cmd = new Get("key");
+                               boolean msgs = false;
+                               for (MessageEnvelope m : s.network())
+                                   msgs = true;
+                               if (!msgs)
+                                   for (int i = 0; i < numServers; i++) {
+                                       ScalarClockPutServer si = (ScalarClockPutServer) s.server(servers.get(i));
+                                       String vi = ((GetResult)si.app.execute(cmd)).value();
+                                       for (int j = i+1; j < numServers; j++) {
+                                           ScalarClockPutServer sj = (ScalarClockPutServer) s.server(servers.get(j));
+                                           String vj = ((GetResult)sj.app.execute(cmd)).value();
+                                           if (!vj.equals(vi))
+                                               return false;
+                                       }
                                    }
-                               }
                                return true;
                            });
         
         for (int i = 0; i < numServers; i++) 
             initSearchState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 1; i++) {
             for (int j = 0; j < numServers; j++) {
-                initSearchState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+                initSearchState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
             }
         }
-        for (int i = 0; i < numServers; i++) 
-            initSearchState.clientWorker(clients.get(i)).addCommand(new Get("key"), new GetResult(""));
         searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
         bfs(initSearchState);
         assertSpaceExhausted();
@@ -166,7 +170,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
 
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send too many messages for read-only commands.")
-    @TestPointValue(15)
+    @TestPointValue(10)
     @Category({RunTests.class})
     public void test03OneServerMessagePerGet() throws InterruptedException {
 
@@ -192,10 +196,37 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
+    @PrettyTestName("Do not send too many messages for update commands.")
+    @TestPointValue(10)
+    @Category({RunTests.class})
+    public void test04TwoServerMessagePerPut() throws InterruptedException {
+
+        StatePredicate twoServerMessagePerPut =
+            statePredicate("At most two message to servers per updatecommand",
+                           s -> {
+                               int ms = 0;
+                               for (int i = 0; i < numServers; i++)
+                                   ms += ((RunState)s).numMessagesSentTo(servers.get(i));
+                               return ms <= 4 * servers.size();
+                           });
+        
+        for (int i = 0; i < numServers; i++) 
+            runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < numServers; j++) {
+                runState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
+            }
+        }
+        runSettings.addInvariant(twoServerMessagePerPut);
+        runState.run(runSettings);
+    }
+
+    @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send multiple replies to clients.")
     @Category({RunTests.class})
-    @TestPointValue(15)
-    public void test04OneReplyPerRequest() throws InterruptedException {
+    @TestPointValue(10)
+    public void test05OneReplyPerRequest() throws InterruptedException {
 
         StatePredicate oneReplyPerRequest =
             statePredicate("At most one reply to client per command",
@@ -210,7 +241,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
             runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
 
         for (int j = 0; j < numServers; j++) {
-            runState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
+            runState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
         }
         for (int j = 0; j < numServers; j++) {
             runState.clientWorker(clients.get(j)).addCommand(new Get("key"),new GetResult(""));
@@ -220,11 +251,29 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     }
 
     
+    @org.junit.Test(timeout = 20 * 1000)
+    @PrettyTestName("Results OK for non-concurrent commands")
+    @TestPointValue(10)
+    @Category({RunTests.class})
+    public void test06ResultsOkNonconcurrent() throws InterruptedException {
+
+        for (int i = 0; i < numServers; i++) 
+            runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
+
+        runSettings.addInvariant(RESULTS_OK);
+        
+        for (int j = 0; j < 2; j++) {
+            runState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
+            runState.clientWorker(clients.get(j)).addCommand(new Get("key"),new GetResult(String.valueOf(j)));
+            runState.run(runSettings);
+        }
+     }
+
     /*    @Test(timeout = 5 * 1000)
     @PrettyTestName("Multiple clients can append simultaneously")
     @Category({RunTests.class})
-    public void test02MultipleClientsAppend() throws InterruptedException {
-        Workload workload = Workload.builder().parser(new AppendParser())
+    public void test02MultipleClientsPut() throws InterruptedException {
+        Workload workload = Workload.builder().parser(new PutParser())
                                     .commandStrings("hello from %a")
                                     .resultStrings("hello from %a").build();
 
@@ -240,7 +289,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @PrettyTestName("Client can still ping if some messages are dropped")
     @Category({RunTests.class, UnreliableTests.class})
     public void test03MessagesDropped() throws InterruptedException {
-        runState.addClientWorker(clients.get(1), repeatedAppends(100));
+        runState.addClientWorker(clients.get(1), repeatedPuts(100));
 
         runSettings.networkUnreliable(true);
 
@@ -251,8 +300,8 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @Test
     @PrettyTestName("Single client repeatedly pings")
     @Category(SearchTests.class)
-    public void test04AppendSearch() throws InterruptedException {
-        initSearchState.addClientWorker(clients.get(1), repeatedAppends(10));
+    public void test04PutSearch() throws InterruptedException {
+        initSearchState.addClientWorker(clients.get(1), repeatedPuts(10));
 
         System.out.println("Checking that the client can finish all pings");
         searchSettings.addInvariant(RESULTS_OK).addGoal(CLIENTS_DONE)

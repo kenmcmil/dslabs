@@ -145,10 +145,16 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
                                if (!msgs)
                                    for (int i = 0; i < numServers; i++) {
                                        ScalarClockPutServer si = (ScalarClockPutServer) s.server(servers.get(i));
-                                       String vi = ((GetResult)si.app.execute(cmd)).value();
+                                       Result r = si.app.execute(cmd);
+                                       if (!(r instanceof GetResult))
+                                           return false;
+                                       String vi = ((GetResult)r).value();
                                        for (int j = i+1; j < numServers; j++) {
                                            ScalarClockPutServer sj = (ScalarClockPutServer) s.server(servers.get(j));
-                                           String vj = ((GetResult)sj.app.execute(cmd)).value();
+                                           Result rj = sj.app.execute(cmd);
+                                           if (!(rj instanceof GetResult))
+                                               return false;
+                                           String vj = ((GetResult)rj).value();
                                            if (!vj.equals(vi))
                                                return false;
                                        }

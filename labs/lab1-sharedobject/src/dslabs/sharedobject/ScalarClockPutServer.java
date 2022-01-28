@@ -8,13 +8,32 @@ import dslabs.framework.Application;
 import dslabs.kvstore.KVStore;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.Data;
 import java.util.ArrayList;
 
+/* -------------------------------------------------------------------------
+   Lexicographically ordered clock
+   
+   Use this class for a clock value that is ordered primarily by
+   an integer time value and secondarily by the server id.
+   If x and y are ClockTuples, then x.lessThan(y) is true when
+   x is lexicographically less than y.
+   
+   -----------------------------------------------------------------------*/
+
+@Data
+class ClockTuple {
+    private final int time;
+    private final Address server;
+    public boolean lessThan(ClockTuple x) {
+        return time < x.time || time == x.time() && server.toString().compareTo(x.server().toString()) < 0;
+    }
+}
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ScalarClockPutServer extends Node {
-    private final Application app = new KVStore();
+    public final Application app = new KVStore();
     private Address otherServer;
 
     // TODO: add some state here

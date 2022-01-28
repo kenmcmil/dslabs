@@ -90,7 +90,7 @@ messages per request, where `N` s the number of servers. In
 particular, you should be able to perform all updates locally without
 waiting on messages from any other servers.
 
-Fill in the "TODO" regions in `ScalarClockPut.java` to complete the
+Fill in the "TODO" regions in `ScalarClockPutServer.java` to complete the
 program. To test it, use this command:
 
    $ ./run-tests.py --lab 1 --part 2
@@ -117,7 +117,7 @@ incoming append operations sent by the other server, along with their
 logical times.
 
 
-Fill in the "TODO" regions in `ScalarClockAppend.java` to complete
+Fill in the "TODO" regions in `ScalarClockAppendServer.java` to complete
 the program. To test it, use this command:
 
    $ ./run-tests.py --lab 1 --part 3

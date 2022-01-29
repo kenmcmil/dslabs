@@ -51,8 +51,6 @@ public class ScalarClockAppendServer extends Node {
         }
     }
 
-    private void handleServerRequest(ServerRequest m, Address sender) {
-        /* TODO: handle requests from other servers here. */
-    }
+    /* TODO: handle other message types here */
 
 }

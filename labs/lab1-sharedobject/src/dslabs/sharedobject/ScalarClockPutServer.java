@@ -69,8 +69,6 @@ public class ScalarClockPutServer extends Node {
         }
     }
 
-    private void handleServerRequest(ServerRequest m, Address sender) {
-        /* TODO: handle requests from other servers here. */
-    }
+    /* TODO: Handle other message types here */
 
 }

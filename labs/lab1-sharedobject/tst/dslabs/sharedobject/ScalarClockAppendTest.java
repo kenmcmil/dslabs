@@ -208,12 +208,12 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     public void test04TwoServerMessagePerAppend() throws InterruptedException {
 
         StatePredicate twoServerMessagePerAppend =
-            statePredicate("At most two message to servers per updatecommand",
+            statePredicate("At most four messages to servers per updatecommand",
                            s -> {
                                int ms = 0;
                                for (int i = 0; i < numServers; i++)
                                    ms += ((RunState)s).numMessagesSentTo(servers.get(i));
-                               return ms <= 4 * servers.size();
+                               return ms <= 8 * servers.size();
                            });
         
         for (int i = 0; i < numServers; i++) 

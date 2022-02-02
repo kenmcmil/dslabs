@@ -79,16 +79,22 @@ Questions to think about:
 ## Part 2
 
 In part 2, we will use scalar clocks to maintain eventual
-consistency. This time, we will assume that the server has to handle only `Get` and `Put` commands, and not `Append` commands.
+consistency. This time, we will assume that the server has to handle
+only `Get` and `Put` commands, and not `Append` commands. Also, to
+make things simple, we will handle only the case of two servers.
 
 Each client should perform all operations on its own local server. All
 messages sent by the servers should contain a scalar clock (the
-clients don't need to maintain clocks). Use the scalar clocks, the ordered
-property of the network and the fact that you only have to satisfy
-*eventual* consistency to guarantee that each server sends only `2N`
-messages per request, where `N` s the number of servers. In
-particular, you should be able to perform all updates locally without
-waiting on messages from any other servers.
+clients don't need to maintain clocks). Use the scalar clocks, the
+ordered property of the network and the fact that you only have to
+satisfy *eventual* consistency to guarantee that each server sends
+only twe messages per request. In particular, you should be able to
+perform all updates locally without waiting on messages from any other
+servers.
+
+In addition to eventual consistency, you should make sure that the
+system provides correct sequential semantics when only one client
+makes requests.
 
 Fill in the "TODO" regions in `ScalarClockPutServer.java` to complete the
 program. To test it, use this command:
@@ -113,9 +119,12 @@ all requests to the primary as in part 1. To make the implementation
 of this a little simpler, you may assume there are exactly two
 servers. Hint: this is very similar to Lamport's mutual exclusion
 algorithm. You may find that the server needs to keep a queue of
-incoming append operations sent by the other server, along with their
+incoming client append commands, along with their
 logical times.
 
+Again, in addition to eventual consistency, you should make sure that
+the system provides correct sequential semantics when only one client
+makes requests.
 
 Fill in the "TODO" regions in `ScalarClockAppendServer.java` to complete
 the program. To test it, use this command:

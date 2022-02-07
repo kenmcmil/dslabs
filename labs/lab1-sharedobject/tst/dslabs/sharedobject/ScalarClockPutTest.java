@@ -98,7 +98,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Short test sequence.")
     @Category({RunTests.class})
-    @TestPointValue(10)
+    @TestPointValue(5)
     public void test01BasicPut() throws InterruptedException {
 
         StatePredicate showResultsMatch =
@@ -130,13 +130,13 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 180 * 1000)
-    @PrettyTestName("Check eventual consistency")
+    @PrettyTestName("Check eventual consistency, one key")
     @Category(SearchTests.class)
     @TestPointValue(10)
-    public void test02BasicPut() throws InterruptedException {
+    public void test02ABasicPut() throws InterruptedException {
 
         StatePredicate showResultsMatch =
-            statePredicate("Replicas consistent when network quiescent",
+            statePredicate("Replicas consistent when network quiescent, same key",
                            s -> {
                                Command cmd = new Get("key");
                                boolean msgs = false;
@@ -167,6 +167,51 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
         for (int i = 0; i < 1; i++) {
             for (int j = 0; j < numServers; j++) {
                 initSearchState.clientWorker(clients.get(j)).addCommand(new Put("key",String.valueOf(j)),new PutOk());
+            }
+        }
+        searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
+        bfs(initSearchState);
+        assertSpaceExhausted();
+    }
+
+    @org.junit.Test(timeout = 180 * 1000)
+    @PrettyTestName("Check eventual consistency, two keys")
+    @Category(SearchTests.class)
+    @TestPointValue(10)
+    public void test02BBasicPut() throws InterruptedException {
+
+        StatePredicate showResultsMatch =
+            statePredicate("Replicas consistent when network quiescent, different keys",
+                           s -> {
+                               Command cmd = new Get("key0");
+                               boolean msgs = false;
+                               for (MessageEnvelope m : s.network())
+                                   msgs = true;
+                               if (!msgs)
+                                   for (int i = 0; i < numServers; i++) {
+                                       ScalarClockPutServer si = (ScalarClockPutServer) s.server(servers.get(i));
+                                       Result r = si.app.execute(cmd);
+                                       if (!(r instanceof GetResult))
+                                           return false;
+                                       String vi = ((GetResult)r).value();
+                                       for (int j = i+1; j < numServers; j++) {
+                                           ScalarClockPutServer sj = (ScalarClockPutServer) s.server(servers.get(j));
+                                           Result rj = sj.app.execute(cmd);
+                                           if (!(rj instanceof GetResult))
+                                               return false;
+                                           String vj = ((GetResult)rj).value();
+                                           if (!vj.equals(vi))
+                                               return false;
+                                       }
+                                   }
+                               return true;
+                           });
+        
+        for (int i = 0; i < numServers; i++) 
+            initSearchState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
+        for (int i = 0; i < 1; i++) {
+            for (int j = 0; j < numServers; j++) {
+                initSearchState.clientWorker(clients.get(j)).addCommand(new Put("key"+j,String.valueOf(j)),new PutOk());
             }
         }
         searchSettings.addInvariant(showResultsMatch).maxTimeSecs(120);
@@ -231,7 +276,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @org.junit.Test(timeout = 20 * 1000)
     @PrettyTestName("Do not send multiple replies to clients.")
     @Category({RunTests.class})
-    @TestPointValue(10)
+    @TestPointValue(5)
     public void test05OneReplyPerRequest() throws InterruptedException {
 
         StatePredicate oneReplyPerRequest =

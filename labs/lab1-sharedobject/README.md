@@ -48,6 +48,8 @@ the primary. After performing an update (`Append` or `Put`) each server passes
 the request on to the next host in the chain. On the other hand, to
 distribute the load and reduce communication time, read-only queries
 (`Get`) are always performed on the client's local server.
+However, it is OK for any server to reply to the client in case of an
+`Append` operation, so long as there is exactly one reply. 
 
 The server is implemented in this file in the handout:
 

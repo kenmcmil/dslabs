@@ -90,7 +90,12 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
 		src_test_path = os.path.join(HANDOUT_DIRECTORY, 'labs', lab, 'tst')
 		dst_test_path = os.path.join(student_path, 'labs', lab, 'tst')
 	        copy_tree(src_test_path, dst_test_path)
-        
+
+        #Copy jars files
+        src_jars_path = os.path.join(HANDOUT_DIRECTORY, 'jars')
+        output_jars_path = os.path.join(student_path, 'jars')
+        copy_tree(src_jars_path, output_jars_path)
+ 
 	for f in os.listdir(HANDOUT_DIRECTORY):
             full_file_path = os.path.join(HANDOUT_DIRECTORY, f)
             # Copy jars/Makefile/lombok.config/etc.

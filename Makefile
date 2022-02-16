@@ -49,9 +49,9 @@ deps/oddity.jar:
 
 build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ deps/oddity.jar
 	rm -rf $@
-	mkdir $@ $@jars
+	mkdir $@ $@/jars
 	$(CP) -r labs examples handout-files/. $(OTHER_FILES) $@
-	$(CP) $(JAR_FILES) deps/oddity.jar $@jars
+	$(CP) $(JAR_FILES) deps/oddity.jar $@/jars
 
 build/handout.tar.gz: build/handout/
 	$(TAR) -czf $@ --transform "s/^build\/handout/dslabs/" $^

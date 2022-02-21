@@ -35,12 +35,11 @@ parser.add_argument(
 args = parser.parse_args()
 
 STUDENT_SUBMISSION_DIR = args.students
-HANDOUT_DIRECTORY = 'handout'
+HANDOUT_DIRECTORY = '../build/handout'
 
 LAB_NAME = args.lab
 LAB_NUMBER = args.lab_num
 
-HANDOUT_DIRECTORY = 'handout'
 TEST_DIRECTORY = os.path.join(HANDOUT_DIRECTORY, 'labs', LAB_NAME, 'tst')
 RESULTS_DIR_NAME = 'results'
 FULL_SUMMARY_NAME = 'test-summary.txt'
@@ -85,18 +84,18 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
         tar_path = os.path.join(student_path, TAR_NAME)
         subprocess.call(['tar', '-xf', tar_path, '--directory', student_path])
  
-	# Copy over all test folders
-	for lab in os.listdir(os.path.join(HANDOUT_DIRECTORY, 'labs')):
-		src_test_path = os.path.join(HANDOUT_DIRECTORY, 'labs', lab, 'tst')
-		dst_test_path = os.path.join(student_path, 'labs', lab, 'tst')
-	        copy_tree(src_test_path, dst_test_path)
+        # Copy over all test folders
+        for lab in os.listdir(os.path.join(HANDOUT_DIRECTORY, 'labs')):
+                src_test_path = os.path.join(HANDOUT_DIRECTORY, 'labs', lab, 'tst')
+                dst_test_path = os.path.join(student_path, 'labs', lab, 'tst')
+                copy_tree(src_test_path, dst_test_path)
 
         #Copy jars files
         src_jars_path = os.path.join(HANDOUT_DIRECTORY, 'jars')
         output_jars_path = os.path.join(student_path, 'jars')
         copy_tree(src_jars_path, output_jars_path)
  
-	for f in os.listdir(HANDOUT_DIRECTORY):
+        for f in os.listdir(HANDOUT_DIRECTORY):
             full_file_path = os.path.join(HANDOUT_DIRECTORY, f)
             # Copy jars/Makefile/lombok.config/etc.
             if os.path.isfile(full_file_path):
@@ -107,11 +106,11 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
         if not os.path.exists(student_result_path):
             os.makedirs(student_result_path)
 
-	# Remove all the MacOS files that have crazy characters in them
-	subprocess.Popen(['find', '.', '-name', '._*', '|', 'xargs', 'rm'], cwd=student_path, shell=True)
+        # Remove all the MacOS files that have crazy characters in them
+        subprocess.Popen(['find', '.', '-name', '._*', '|', 'xargs', 'rm'], cwd=student_path, shell=True)
 
-	# Calculate the score for this student        
-	SCORES[student] = {}
+        # Calculate the score for this student        
+        SCORES[student] = {}
         for run_index in range(TIMES_TO_RUN):
 
             # Run tests and collect output
@@ -123,7 +122,7 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
             # Add to the summary
             with open(log_out_path, 'r') as out:
                 test_results = out.read()
-		SCORES[student][run_index] = {}
+                SCORES[student][run_index] = {}
                 for line in test_results.split('\n'):
                     for term in SEARCH_TERMS:
                         if term in line:
@@ -152,7 +151,7 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
     except ValueError as e:
         print('Encountered ' + str(e))
         print('Could not grade student ' + student)
-	raise(e)
+        raise(e)
 
 # Write out the summary of all students
 with open(os.path.join(RESULTS_DIR_NAME, FULL_SUMMARY_NAME), 'w+') as out:

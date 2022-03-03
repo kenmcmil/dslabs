@@ -862,12 +862,14 @@ public class PrimaryBackupTest extends BaseJUnitTest {
         bfs(primaryAlone);
         final SearchState client1Done = goalMatchingState();
 
-        // Make sure that the second client can finish, sending message to backup
-        searchSettings.maxTimeSecs(30).resetNetwork()
+        // Find a state where server 2 has become primary
+        searchSettings.maxTimeSecs(50).resetNetwork()
                       .partition(server(1), server(2), client(2), VSA)
-                      .linkActive(server(1), client(2), false)
-                      .linkActive(client(2), server(1), false).clearGoals()
-                      .addGoal(CLIENTS_DONE).clearPrunes().addPrune(
+                        .linkActive(server(1), client(2), false)
+                       .linkActive(client(2), server(1), false)
+                      .clearGoals()
+               .addGoal((hasViewReply(INITIAL_VIEWNUM + 4, server(2), null)))
+                .clearPrunes().addPrune(
                 hasViewReply(INITIAL_VIEWNUM + 3).implies(
                         hasViewReply(INITIAL_VIEWNUM + 3, server(1), server(2)))
                                                  .negate()).addPrune(
@@ -877,9 +879,19 @@ public class PrimaryBackupTest extends BaseJUnitTest {
                       .addPrune(hasViewReply(INITIAL_VIEWNUM + 5));
         bfs(client1Done);
         assertGoalFound();
+        final SearchState server2Primary = goalMatchingState();
 
-        searchSettings.clearGoals();
-        bfs(client1Done);
+        // Make sure that the second client can finish, sending message to backup
+        searchSettings.clearGoals()
+              .addGoal(CLIENTS_DONE);
+        bfs(server2Primary);
+        assertGoalFound();
+        final SearchState client2Done = goalMatchingState();
+
+       
+        searchSettings.maxTimeSecs(30).clearGoals();
+        bfs(server2Primary);
+
     }
 
     @Test

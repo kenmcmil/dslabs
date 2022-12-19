@@ -9,7 +9,7 @@ import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.junit.BaseJUnitTest;
-import dslabs.framework.testing.junit.PrettyTestName;
+import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.junit.SearchTests;
 import dslabs.framework.testing.junit.UnreliableTests;
@@ -19,6 +19,8 @@ import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.SerializableFunction;
 import dslabs.framework.testing.StatePredicate;
 import dslabs.framework.testing.MessageEnvelope;
+import dslabs.framework.testing.junit.Lab;
+import dslabs.framework.testing.junit.Part;
 import static dslabs.framework.testing.StatePredicate.statePredicate;
 import dslabs.kvstore.KVStore.Append;
 import dslabs.kvstore.KVStore.AppendResult;
@@ -39,6 +41,8 @@ import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Lab("1")
+@Part(2)
 public final class ScalarClockAppendTest extends BaseJUnitTest {
 
     public static final int numServers = 2;
@@ -96,7 +100,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Short test sequence.")
+    @TestDescription("Short test sequence.")
     @Category({RunTests.class})
     @TestPointValue(10)
     public void test01BasicAppend() throws InterruptedException {
@@ -130,7 +134,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 180 * 1000)
-    @PrettyTestName("Check eventual consistency")
+    @TestDescription("Check eventual consistency")
     @Category(SearchTests.class)
     @TestPointValue(10)
     public void test02BasicAppend() throws InterruptedException {
@@ -175,7 +179,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Do not send too many messages for read-only commands.")
+    @TestDescription("Do not send too many messages for read-only commands.")
     @TestPointValue(10)
     @Category({RunTests.class})
     public void test03OneServerMessagePerGet() throws InterruptedException {
@@ -202,7 +206,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Do not send too many messages for update commands.")
+    @TestDescription("Do not send too many messages for update commands.")
     @TestPointValue(10)
     @Category({RunTests.class})
     public void test04TwoServerMessagePerAppend() throws InterruptedException {
@@ -229,7 +233,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Do not send multiple replies to clients.")
+    @TestDescription("Do not send multiple replies to clients.")
     @Category({RunTests.class})
     @TestPointValue(10)
     public void test05OneReplyPerRequest() throws InterruptedException {
@@ -258,7 +262,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
 
     
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Results OK for non-concurrent commands")
+    @TestDescription("Results OK for non-concurrent commands")
     @TestPointValue(10)
     @Category({RunTests.class})
     public void test06ResultsOkNonconcurrent() throws InterruptedException {
@@ -278,7 +282,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
      }
 
     /*    @Test(timeout = 5 * 1000)
-    @PrettyTestName("Multiple clients can append simultaneously")
+    @TestDescription("Multiple clients can append simultaneously")
     @Category({RunTests.class})
     public void test02MultipleClientsAppend() throws InterruptedException {
         Workload workload = Workload.builder().parser(new AppendParser())
@@ -294,7 +298,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @Test(timeout = 5 * 1000)
-    @PrettyTestName("Client can still ping if some messages are dropped")
+    @TestDescription("Client can still ping if some messages are dropped")
     @Category({RunTests.class, UnreliableTests.class})
     public void test03MessagesDropped() throws InterruptedException {
         runState.addClientWorker(clients.get(1), repeatedAppends(100));
@@ -306,7 +310,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
     }
 
     @Test
-    @PrettyTestName("Single client repeatedly pings")
+    @TestDescription("Single client repeatedly pings")
     @Category(SearchTests.class)
     public void test04AppendSearch() throws InterruptedException {
         initSearchState.addClientWorker(clients.get(1), repeatedAppends(10));

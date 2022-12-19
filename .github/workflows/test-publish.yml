@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '14', '15', '16', '17' ]
+        java: [ '14', '15', '16', '17', '18', '19' ]
     steps:
       - uses: actions/checkout@v2
 
@@ -22,11 +22,6 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
           cache: 'gradle'
-
-      - uses: actions/cache@v2
-        with:
-          path: deps/oddity.jar
-          key: ${{ runner.os }}-oddity-${{ hashFiles('Makefile') }}
 
       - run: make dependencies
       - run: make all
@@ -44,13 +39,8 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: '14'
+          java-version: '17'
           cache: 'gradle'
-
-      - uses: actions/cache@v2
-        with:
-          path: deps/oddity.jar
-          key: ${{ runner.os }}-oddity-${{ hashFiles('Makefile') }}
 
       - run: make build/handout/
 

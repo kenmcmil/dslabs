@@ -22,14 +22,14 @@
 
 package dslabs.framework.testing.junit;
 
-import dslabs.framework.Address;
 import dslabs.framework.Client;
 import dslabs.framework.Command;
 import dslabs.framework.Node;
 import dslabs.framework.Result;
 import dslabs.framework.testing.ClientWorker;
-import dslabs.framework.testing.LocalAddress;
+import dslabs.framework.testing.Event;
 import dslabs.framework.testing.StatePredicate;
+import dslabs.framework.testing.StatePredicate.PredicateResult;
 import dslabs.framework.testing.runner.RunSettings;
 import dslabs.framework.testing.runner.RunState;
 import dslabs.framework.testing.search.Search;
@@ -39,8 +39,7 @@ import dslabs.framework.testing.search.SearchSettings;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.Cloning;
 import dslabs.framework.testing.utils.GlobalSettings;
-import dslabs.framework.testing.visualization.VizClient;
-import java.io.IOException;
+import dslabs.framework.testing.visualization.DebuggerWindow;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,7 +49,6 @@ import lombok.SneakyThrows;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
 
 import static dslabs.framework.testing.search.SearchResults.EndCondition.EXCEPTION_THROWN;
@@ -61,15 +59,22 @@ import static dslabs.framework.testing.search.SearchResults.EndCondition.TIME_EX
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@RunWith(DSLabsTestRunner.class)
-public abstract class BaseJUnitTest {
+/**
+ * Base test class with utility functions for running systems of Nodes and
+ * search tests. Test classes which do not need this functionality and would
+ * rather have a bare-bones setup should instead directly inherit from
+ * {@link DSLabsJUnitTest}.
+ */
+public abstract class BaseJUnitTest extends DSLabsJUnitTest {
     /* Settings */
     protected RunSettings runSettings;
     protected SearchSettings searchSettings;
+    private SearchSettings lastSearchSettings;
 
     /* States */
     protected RunState runState;
     protected SearchState initSearchState;
+    private SearchState bfsStartState;
 
     /* Internal */
     private Set<Thread> startedThreads;
@@ -83,8 +88,8 @@ public abstract class BaseJUnitTest {
     }
 
     protected final boolean isSearchTest() {
-        return DSLabsTestListener
-                .isInCategory(testDescription, SearchTests.class);
+        return DSLabsTestListener.isInCategory(testDescription,
+                SearchTests.class);
     }
 
     protected void setupTest() {
@@ -105,7 +110,7 @@ public abstract class BaseJUnitTest {
     protected void cleanupTest() {
     }
 
-    @Rule public TestRule rule = new TestRule() {
+    @Rule public final TestRule rule = new TestRule() {
         @Override
         public Statement apply(final Statement base,
                                final Description description) {
@@ -154,8 +159,10 @@ public abstract class BaseJUnitTest {
                         cleanupTest();
                         runSettings = null;
                         searchSettings = null;
+                        lastSearchSettings = null;
                         runState = null;
                         initSearchState = null;
+                        bfsStartState = null;
                         startedThreads = null;
                         searchResults = null;
                         testDescription = null;
@@ -184,31 +191,14 @@ public abstract class BaseJUnitTest {
     }
 
 
-    /* Addresses */
-
-    public static Address client(int i) {
-        return new LocalAddress("client" + i);
-    }
-
-    public static Address server(int i) {
-        return new LocalAddress("server" + i);
-    }
-
-
     /* Run test helper methods */
 
     protected final void assertRunInvariantsHold() {
-        if (runSettings.invariantsHold(runState)) {
+        PredicateResult r = runSettings.invariantViolated(runState);
+        if (r == null) {
             return;
         }
-
-        StatePredicate invariant = runSettings.whichInvariantViolated(runState);
-        if (invariant == null) {
-            // TODO: log the error
-            fail("Invariant violated.");
-        } else {
-            fail(invariant.errorMessage(runState));
-        }
+        fail(r.errorMessage());
     }
 
     protected final void startThread(Runnable runnable) {
@@ -249,6 +239,8 @@ public abstract class BaseJUnitTest {
     protected final void bfs(SearchState searchState,
                              SearchSettings searchSettings) {
         assert searchState != null;
+        bfsStartState = searchState;
+        lastSearchSettings = searchSettings.clone();
         searchResults = Search.bfs(searchState, searchSettings);
         assertEndConditionValid();
     }
@@ -260,12 +252,21 @@ public abstract class BaseJUnitTest {
     protected final void dfs(SearchState searchState,
                              SearchSettings searchSettings) {
         assert searchState != null;
+        lastSearchSettings = searchSettings.clone();
         searchResults = Search.dfs(searchState, searchSettings);
         assertEndConditionValid();
     }
 
     protected final void dfs(SearchState searchState) {
         dfs(searchState, searchSettings);
+    }
+
+    final void traceReplay(SearchState searchState, List<Event> trace) {
+        assert searchState != null;
+        lastSearchSettings = searchSettings.clone();
+        searchResults =
+                new TraceReplaySearch(searchSettings, trace).run(searchState);
+        assertEndConditionValid();
     }
 
     @SneakyThrows
@@ -276,15 +277,15 @@ public abstract class BaseJUnitTest {
         }
 
         final SearchState terminal;
-        final StatePredicate invariant;
+        final PredicateResult invariantViolated;
         final Throwable exception;
         if (ec == INVARIANT_VIOLATED) {
             terminal = searchResults.invariantViolatingState();
-            invariant = searchResults.invariantViolated();
+            invariantViolated = searchResults.invariantViolated();
             exception = null;
         } else {
             terminal = searchResults.exceptionalState();
-            invariant = null;
+            invariantViolated = null;
             exception = searchResults.exceptionalState().thrownException();
         }
 
@@ -293,21 +294,26 @@ public abstract class BaseJUnitTest {
         humanReadable.printTrace();
 
         if (ec == INVARIANT_VIOLATED) {
-            System.err.println(
-                    "\n" + invariant.errorMessage(humanReadable) + "\n");
+            System.err.println("\n" + invariantViolated.errorMessage() + "\n");
         } else {
             System.err.println();
         }
 
+        if (GlobalSettings.saveTraces()) {
+            var testClass = testDescription.getTestClass();
+            var labAnnotation = testClass.getAnnotation(Lab.class);
+            var partAnnotation = testClass.getAnnotation(Part.class);
+            SearchState.saveTrace(terminal, searchResults.invariantsTested(),
+                    labAnnotation.value(),
+                    partAnnotation == null ? null : partAnnotation.value(),
+                    testClass.getName(), testDescription.getMethodName());
+        }
+
         if (GlobalSettings.startVisualization()) {
+            final SearchSettings settings = lastSearchSettings;
             Thread thread = new Thread(() -> {
-                VizClient vc = new VizClient(humanReadable, invariant, true);
-                try {
-                    vc.run();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }, "VizClient");
+                new DebuggerWindow(humanReadable, settings);
+            }, "VizDebugger");
             thread.setDaemon(false);
             thread.start();
 
@@ -381,6 +387,23 @@ public abstract class BaseJUnitTest {
             default -> "";
         });
 
+        if (GlobalSettings.startVisualization() && bfsStartState != null) {
+            final SearchState humanReadable =
+                    SearchState.humanReadableTraceEndState(bfsStartState);
+            final SearchSettings settings = lastSearchSettings;
+            Thread thread = new Thread(() -> {
+                new DebuggerWindow(humanReadable, settings);
+            }, "VizDebugger");
+            thread.setDaemon(false);
+            thread.start();
+
+            sb.append("\nStarting visualization from beginning of search.\n");
+
+            System.err.println(sb);
+
+            throw new VizClientStarted();
+        }
+
         if (endTestOnFailure) {
             fail(sb.toString());
         } else {
@@ -442,9 +465,8 @@ public abstract class BaseJUnitTest {
 
         final String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
         final int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
-        final String baseStr = new DecimalFormat("#,##0.#")
-                .format(size / Math.pow(1024, digitGroups)) + " " +
-                units[digitGroups];
+        final String baseStr = new DecimalFormat("#,##0.#").format(
+                size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
         return prefix + baseStr;
     }
 }

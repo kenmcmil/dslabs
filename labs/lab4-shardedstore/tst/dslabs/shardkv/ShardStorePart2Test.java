@@ -4,9 +4,11 @@ import dslabs.framework.Address;
 import dslabs.framework.Client;
 import dslabs.framework.Result;
 import dslabs.framework.testing.Workload;
-import dslabs.framework.testing.junit.PrettyTestName;
+import dslabs.framework.testing.junit.Lab;
+import dslabs.framework.testing.junit.Part;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.junit.SearchTests;
+import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.TestPointValue;
 import dslabs.framework.testing.junit.UnreliableTests;
 import dslabs.kvstore.TransactionalKVStore.MultiGetResult;
@@ -16,15 +18,15 @@ import dslabs.shardmaster.ShardMaster.Leave;
 import dslabs.shardmaster.ShardMaster.Ok;
 import java.util.List;
 import java.util.Objects;
-import org.junit.FixMethodOrder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
 
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
+import static dslabs.framework.testing.StatePredicate.TRUE_NO_MESSAGE;
 import static dslabs.framework.testing.StatePredicate.resultsHaveType;
-import static dslabs.framework.testing.StatePredicate.statePredicate;
+import static dslabs.framework.testing.StatePredicate.statePredicateWithMessage;
 import static dslabs.kvstore.KVStoreWorkload.KEY_NOT_FOUND;
 import static dslabs.kvstore.TransactionalKVStoreWorkload.MULTI_GETS_MATCH;
 import static dslabs.kvstore.TransactionalKVStoreWorkload.OK;
@@ -36,10 +38,11 @@ import static dslabs.kvstore.TransactionalKVStoreWorkload.swap;
 import static dslabs.kvstore.TransactionalKVStoreWorkload.swapOk;
 import static junit.framework.TestCase.assertFalse;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Lab("4")
+@Part(3)
 public class ShardStorePart2Test extends ShardStoreBaseTest {
     @Test(timeout = 5 * 1000)
-    @PrettyTestName("Single group, simple transactional workload")
+    @TestDescription("Single group, simple transactional workload")
     @Category(RunTests.class)
     @TestPointValue(5)
     public void test01SingleBasic() throws InterruptedException {
@@ -61,7 +64,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 5 * 1000)
-    @PrettyTestName("Multi-group, simple transactional workload")
+    @TestDescription("Multi-group, simple transactional workload")
     @Category(RunTests.class)
     @TestPointValue(5)
     public void test02MultiBasic() throws InterruptedException {
@@ -86,7 +89,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 10 * 1000)
-    @PrettyTestName("No progress when groups can't communicate")
+    @TestDescription("No progress when groups can't communicate")
     @Category(RunTests.class)
     @TestPointValue(10)
     public void test03NoProgress() throws InterruptedException {
@@ -132,7 +135,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 10 * 1000)
-    @PrettyTestName("Isolation between MultiPuts and MultiGets")
+    @TestDescription("Isolation between MultiPuts and MultiGets")
     @Category(RunTests.class)
     @TestPointValue(10)
     public void test04PutGetIsolation() throws InterruptedException {
@@ -201,7 +204,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 60 * 1000)
-    @PrettyTestName("Repeated MultiPuts and MultiGets, different keys")
+    @TestDescription("Repeated MultiPuts and MultiGets, different keys")
     @Category(RunTests.class)
     @TestPointValue(20)
     public void test05RepeatedPutsGets() throws InterruptedException {
@@ -209,7 +212,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 60 * 1000)
-    @PrettyTestName("Repeated MultiPuts and MultiGets, different keys")
+    @TestDescription("Repeated MultiPuts and MultiGets, different keys")
     @Category({RunTests.class, UnreliableTests.class})
     @TestPointValue(20)
     public void test06RepeatedPutsGetsUnreliable() throws InterruptedException {
@@ -218,7 +221,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test(timeout = 60 * 1000)
-    @PrettyTestName(
+    @TestDescription(
             "Repeated MultiPuts and MultiGets, different keys; constant movement")
     @Category({RunTests.class, UnreliableTests.class})
     @TestPointValue(20)
@@ -228,7 +231,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test
-    @PrettyTestName("Single client, single group; MultiPut, MultiGet")
+    @TestDescription("Single client, single group; MultiPut, MultiGet")
     @Category(SearchTests.class)
     @TestPointValue(20)
     public void test08SingleClientSingleGroupSearch() {
@@ -239,7 +242,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test
-    @PrettyTestName("Single client, multi-group; MultiPut, MultiGet")
+    @TestDescription("Single client, multi-group; MultiPut, MultiGet")
     @Category(SearchTests.class)
     @TestPointValue(20)
     public void test09SingleClientMultiGroupSearch() {
@@ -250,7 +253,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test
-    @PrettyTestName("Multi-client, multi-group; MultiPut, Swap, MultiGet")
+    @TestDescription("Multi-client, multi-group; MultiPut, Swap, MultiGet")
     @Category(SearchTests.class)
     @TestPointValue(20)
     public void test10MultiClientMultiGroupSearch() {
@@ -290,28 +293,40 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
                         multiGet("foo-1", "foo-2")).build());
 
         searchSettings.maxDepth(1000).maxTimeSecs(20).addInvariant(
-                statePredicate("MultiGet returns correct results", s -> {
-                    List<Result> results = s.clientWorker(client(2)).results();
-                    if (results.isEmpty()) {
-                        return true;
-                    }
-                    if (results.size() > 1) {
-                        return false;
-                    }
-                    Result r = results.get(0);
-                    return Objects.equals(r,
-                            multiGetResult("foo-1", "X", "foo-2", "Y")) ||
-                            Objects.equals(r,
+                statePredicateWithMessage("MultiGet returns correct results",
+                        s -> {
+                            List<Result> results =
+                                    s.clientWorker(client(2)).results();
+                            if (results.isEmpty()) {
+                                return TRUE_NO_MESSAGE;
+                            }
+                            if (results.size() > 1) {
+                                return new ImmutablePair<>(false, String.format(
+                                        "%s received multiple MultiGetResults",
+                                        client(2)));
+                            }
+                            Result r = results.get(0);
+                            if (!Objects.equals(r,
+                                    multiGetResult("foo-1", "X", "foo-2",
+                                            "Y")) && !Objects.equals(r,
                                     multiGetResult("foo-1", KEY_NOT_FOUND,
-                                            "foo-2", KEY_NOT_FOUND));
-                })).addInvariant(RESULTS_OK).addPrune(CLIENTS_DONE);
+                                            "foo-2", KEY_NOT_FOUND))) {
+                                return new ImmutablePair<>(false, String.format(
+                                        "%s matches neither of %s or %s", r,
+                                        multiGetResult("foo-1", KEY_NOT_FOUND,
+                                                "foo-2", KEY_NOT_FOUND),
+                                        multiGetResult("foo-1", "X", "foo-2",
+                                                "Y")));
+                            }
+                            return TRUE_NO_MESSAGE;
+                        })).addInvariant(RESULTS_OK).addPrune(CLIENTS_DONE);
 
         dfs(initSearchState);
 
     }
 
     @Test
-    @PrettyTestName("One server per group random search")
+    @TestDescription("One server per group random search")
     @Category(SearchTests.class)
     @TestPointValue(20)
     public void test11SingleServerRandomSearch() {
@@ -319,7 +334,7 @@ public class ShardStorePart2Test extends ShardStoreBaseTest {
     }
 
     @Test
-    @PrettyTestName("Multiple servers per group random search")
+    @TestDescription("Multiple servers per group random search")
     @Category(SearchTests.class)
     @TestPointValue(20)
     public void test12MultiServerRandomSearch() {

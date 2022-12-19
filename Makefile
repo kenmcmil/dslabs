@@ -1,6 +1,5 @@
-.PHONY: all test dependencies clean clean-all
-
-ODDITY_URL = https://github.com/uwplse/oddity/releases/download/v0.39a/oddity.jar
+.PHONY: all test dependencies serve clean clean-all
+.FORCE:
 
 FRAMEWORK_FILES = $(shell find framework -type f | sed 's/ /\\ /g')
 LAB_FILES = $(shell find labs -type f | sed 's/ /\\ /g')
@@ -32,7 +31,7 @@ endif
 
 all: build/handout/
 
-dependencies: deps/oddity.jar
+dependencies:
 	./gradlew copyDependencies
 
 build/libs/: $(FRAMEWORK_FILES)
@@ -43,15 +42,11 @@ build/doc/: $(FRAMEWORK_FILES)
 	./gradlew javadoc
 	touch $@
 
-deps/oddity.jar:
-	mkdir -p deps
-	wget -O $@ $(ODDITY_URL)
-
-build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ deps/oddity.jar
+build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/
 	rm -rf $@
 	mkdir $@ $@/jars
 	$(CP) -r labs examples handout-files/. $(OTHER_FILES) $@
-	$(CP) $(JAR_FILES) deps/oddity.jar $@/jars
+	$(CP) $(JAR_FILES) $@/jars
 
 build/handout.tar.gz: build/handout/
 	$(TAR) -czf $@ --transform "s/^build\/handout/dslabs/" $^
@@ -59,8 +54,19 @@ build/handout.tar.gz: build/handout/
 test:
 	./gradlew test
 
+www/javadoc/: build/doc/
+	rsync -a --delete $< $@
+
+build/www/: www/javadoc/ .FORCE
+	mkdir -p $@
+	cd ./www;	bundle exec jekyll build -d ../$@
+	touch $@
+
+serve: www/javadoc/
+	cd www; watchy -w _config.yml -- bundle exec jekyll serve --watch -d ../build/www/
+
 clean:
-	rm -rf build
+	rm -rf build www/javadoc www/.jekyll-cache
 
 clean-all: clean
-	rm -rf deps .gradle
+	rm -rf deps .gradle traces

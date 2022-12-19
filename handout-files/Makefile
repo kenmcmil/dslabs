@@ -25,7 +25,7 @@ JAVA_TST = $(shell find labs/*/tst -type f -name "*.java") $(shell find examples
 ################################################################################
 # Targets
 ################################################################################
-.PHONY: all clean
+.PHONY: all clean clean-all
 
 all: $(OUT)/src/ $(OUT)/tst/
 
@@ -48,7 +48,10 @@ submit.zip:
 	@ rm -f $@
 	@ zip -r $@ labs/*/src
 
-
 clean:
 	@ echo "[clean]"
 	@ rm -rf $(OUT) submit.tar.gz
+
+clean-all: clean
+	@ echo "[clean-all]"
+	@ rm -rf traces

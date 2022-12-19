@@ -22,6 +22,7 @@
 
 package dslabs.framework.testing.search;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -35,7 +36,9 @@ import dslabs.framework.testing.ClientWorker;
 import dslabs.framework.testing.Event;
 import dslabs.framework.testing.MessageEnvelope;
 import dslabs.framework.testing.StateGenerator;
+import dslabs.framework.testing.StatePredicate;
 import dslabs.framework.testing.TimerEnvelope;
+import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.utils.Cloning;
 import java.io.PrintStream;
 import java.io.Serializable;
@@ -60,6 +63,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Log
@@ -346,10 +350,10 @@ public final class SearchState extends AbstractState
             settings = new SearchSettings();
         }
 
-        Address toAddress = message.to().rootAddress();
+        final Address toAddress = message.to().rootAddress();
 
         // Node must exist
-        if (!hasNode(message.to().rootAddress()) || (!skipChecks &&
+        if (!hasNode(toAddress) || (!skipChecks &&
                 !(network.contains(message) &&
                         settings.shouldDeliver(message)))) {
             return null;
@@ -364,17 +368,54 @@ public final class SearchState extends AbstractState
         return ns;
     }
 
-    public SearchState stepTimer(TimerEnvelope timer, SearchSettings settings,
-                                 boolean skipChecks) {
+    /**
+     * Checks whether the timer's destination root node exists, the search
+     * settings allow the timer to be delivered, and the timer is deliverable
+     * according to its delivery rules.
+     *
+     * @param timer
+     *         the timer
+     * @param settings
+     *         the settings or null to use default {@link SearchSettings}
+     * @return {@code true} iff the equivalent call to {@link
+     * #stepTimer(TimerEnvelope, SearchSettings, boolean)} with {@code
+     * skipChecks = true} would attempt to generate a successor state
+     *
+     * @see TimerQueue
+     */
+    public boolean canStepTimer(TimerEnvelope timer, SearchSettings settings) {
         if (settings == null) {
             settings = new SearchSettings();
         }
 
-        Address toAddress = timer.to().rootAddress();
+        final Address toAddress = timer.to().rootAddress();
 
-        if (!hasNode(timer.to().rootAddress()) || (!skipChecks &&
-                !(settings.deliverTimers(toAddress) &&
-                        timers.get(toAddress).isDeliverable(timer)))) {
+        return hasNode(toAddress) && settings.deliverTimers(toAddress) &&
+                timers.get(toAddress).isDeliverable(timer);
+    }
+
+    /**
+     * Equivalent to {@link #canStepTimer(TimerEnvelope, SearchSettings)} with
+     * {@code null} {@link SearchSettings}.
+     */
+    public boolean canStepTimer(TimerEnvelope timer) {
+        return canStepTimer(timer, null);
+    }
+
+    public SearchState stepTimer(TimerEnvelope timer, SearchSettings settings,
+                                 boolean skipChecks) {
+        // TODO: here and everywhere else we instantiate SearchSettings to get defaults, use a singleton
+        if (settings == null) {
+            settings = new SearchSettings();
+        }
+
+        final Address toAddress = timer.to().rootAddress();
+
+        if (!hasNode(toAddress)) {
+            return null;
+        }
+
+        if (!skipChecks && !canStepTimer(timer, settings)) {
             return null;
         }
 
@@ -518,6 +559,42 @@ public final class SearchState extends AbstractState
 
     public void printTrace() {
         printTrace(System.err);
+    }
+
+    public static void saveTrace(@NonNull SearchState state,
+                                 Collection<StatePredicate> invariants,
+                                 @NonNull String labId, Integer labPart,
+                                 @NonNull String testClassName,
+                                 @NonNull String testMethodName) {
+        final Iterable<SearchState> trace = state.trace();
+        final SearchState initialState = Iterables.getFirst(trace, null);
+        assert initialState != null;
+
+        final List<Event> history = new LinkedList<>();
+        boolean skippedFirst = false;
+        for (SearchState s : trace) {
+            if (!skippedFirst) {
+                skippedFirst = true;
+                continue;
+            }
+            assert s.previousEvent != null;
+            history.add(s.previousEvent);
+        }
+
+        final List<Pair<Address, Workload>> clientWorkers = new LinkedList<>();
+        for (Address a : state.clientWorkerAddresses()) {
+            Workload workload = state.clientWorker(a).workload();
+            workload.reset();
+            clientWorkers.add(new ImmutablePair<>(a, workload));
+        }
+
+        SerializableTrace serializableTrace =
+                new SerializableTrace(history, invariants, state.gen,
+                        ImmutableList.copyOf(state.serverAddresses()),
+                        clientWorkers, labId, labPart, testClassName,
+                        testMethodName);
+
+        serializableTrace.save();
     }
 
     /**

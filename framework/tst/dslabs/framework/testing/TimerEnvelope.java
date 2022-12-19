@@ -24,12 +24,16 @@ package dslabs.framework.testing;
 
 import dslabs.framework.Address;
 import dslabs.framework.Timer;
+import dslabs.framework.VizIgnore;
 import java.io.Serializable;
 import java.util.Random;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
+ * Stores a timer, its delivery address, its duration, and its creation time.
+ * Equality is based on delivery address, timer object, and duration only.
+ *
  * Note: this class has a natural ordering that is inconsistent with equals.
  */
 @Data
@@ -42,10 +46,10 @@ public final class TimerEnvelope
     private final Address to;
     private final Timer timer;
 
-    private final int minTimerLengthMillis, maxTimerLengthMillis,
+    @VizIgnore private final int minTimerLengthMillis, maxTimerLengthMillis,
             timerLengthMillis;
 
-    private final long startTimeNanos;
+    @VizIgnore private final long startTimeNanos;
 
     public TimerEnvelope(Address to, Timer timer, int minTimerLengthMillis,
                          int maxTimerLengthMillis) {

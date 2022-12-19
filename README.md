@@ -34,11 +34,10 @@ which systematically explore the state-space of students' implementations. These
 tests are much more likely to catch many common distributed systems bugs,
 especially bugs which rely on precise orderings of messages. Moreover, when a
 bug is found, these search-based tests output a trace which generates the error,
-making debugging dramatically simpler. Finally, DSLabs is integrated with a tool
-for [visualizing executions of distributed
-systems](https://github.com/uwplse/oddity), which allows students to graphically
-explore executions of their systems and visualize invariant-violating traces
-found by the model-checker.
+making debugging dramatically simpler. Finally, DSLabs is integrated with a
+visual debugging tool, which allows students to graphically explore executions
+of their systems and visualize invariant-violating traces found by the
+model-checker.
 
 
 ### Programming Model
@@ -106,15 +105,13 @@ Java requires striking a balance between usability and performance.
 
 
 ### Visualization
-This framework is integrated with the [Oddity](https://github.com/uwplse/oddity)
-distributed systems visualization tool, created by [Doug
-Woos](https://www.dougwoos.com/). This tool allows students to interactively
-explore executions of the distributed systems they build. By exploring
-executions of their distributed system, students can very quickly test their own
-hypotheses about how their nodes should behave, helping them discover bugs in
-their protocols and gain a deeper understanding for the way their systems work.
-Additionally, the tool is used to visualize the invariant-violating traces
-produced by the model-checker.
+This framework is integrated with a visual debugger. This tool allows students
+to interactively explore executions of the distributed systems they build. By
+exploring executions of their distributed system, students can very quickly test
+their own hypotheses about how their nodes should behave, helping them discover
+bugs in their protocols and gain a deeper understanding for the way their
+systems work. Additionally, the tool is used to visualize the
+invariant-violating traces produced by the model-checker.
 
 
 ## Assignments
@@ -153,6 +150,7 @@ at the University of Washington.
   handout, including the main `README` and `run-tests.py`.
 - `grading` contains scripts created by previous TAs for the course to batch
   grade submissions.
+- `www` contains the DSLabs website which is built with Jekyll.
 
 The `master` branch of this repository is not setup to be distributed to
 students as-is. The `Makefile` has targets to build the `handout` directory and
@@ -162,8 +160,41 @@ repository is an auto-built version of the handout.
 
 
 ## Contributing
-The framework and assignments are ready to be used, but they are also works in
-progress. There are more features planned, and we welcome pull requests.
+The main tools for development are the same as the students' dependencies — Java
+14 and Python 3. You will also need a few utilities such as `wget` to build with
+the provided `Makefile`; MacOS users will need `gtar` and `gcp` provided by the
+`coreutils` Homebrew package.
+
+IntelliJ files are provided and include a code style used by this project. In
+order to provide IntelliJ with all of the necessary libraries, you must run
+`make dependencies` once after cloning the repository and whenever you add to or
+modify the project's dependencies.
+
+If you add fields to any student-visible classes (all classes in the `framework`
+package as well as `SearchState` and related classes), you should take care to
+ensure that `toString` prints the correct information and that the classes are
+cloned correctly. See `dslabs.framework.testing.utils.Cloning` for more details.
+Also see Lombok's `@ToString` annotation for more information about customizing
+its behavior. In particular, note that `transient` and `static` fields are
+ignored by default by all cloning, serialization, and `toString` methods.
+
+
+## Acknowledgements
+The framework and labs have been improved thanks to valuable contributions from:
+- Alex Saveau
+- Andrew Wei
+- Doug Woos
+- James Wilcox
+- John Depaszthory
+- Kaelin Laundry
+- Logan Gnanapragasam
+- Nick Anderson
+- Paul Yau
+- Sarang Joshi
+- Thomas Anderson
+
+The lab assignments, especially labs 2 and 4, were adapted with permission from
+the MIT 6.824 labs developed by Robert Morris and colleagues.
 
 
 ## Contact

@@ -21,17 +21,12 @@ sourceSets {
     java {
       srcDirs = ['framework/tst']
     }
+    resources {
+      srcDirs = ['framework/tst']
+      includes = ['**/*.properties']
+    }
     compileClasspath += main.compileClasspath + main.output
     annotationProcessorPath += main.annotationProcessorPath
-  }
-
-  test {
-    java {
-      srcDirs = ['framework/tst-self']
-    }
-    compileClasspath += grader.compileClasspath + grader.output
-    runtimeClasspath += grader.runtimeClasspath
-    annotationProcessorPath += grader.annotationProcessorPath
   }
 
   labs {
@@ -57,6 +52,15 @@ sourceSets {
     compileClasspath += grader.compileClasspath + grader.output + labs.output
     annotationProcessorPath += grader.annotationProcessorPath
   }
+
+  test {
+    java {
+      srcDirs = ['framework/tst-self']
+    }
+    compileClasspath += grader.compileClasspath + grader.output
+    runtimeClasspath += grader.runtimeClasspath + labs.runtimeClasspath + labsTests.runtimeClasspath
+    annotationProcessorPath += grader.annotationProcessorPath
+  }
 }
 
 configurations {
@@ -78,26 +82,39 @@ dependencies {
   annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
   sources             group: 'org.projectlombok', name: 'lombok', version: '1.18.20', classifier: 'sources'
 
-  implementation group: 'com.google.guava', name: 'guava', version: '29.0-jre'
-  sources        group: 'com.google.guava', name: 'guava', version: '29.0-jre', classifier: 'sources'
+  implementation group: 'com.google.guava', name: 'guava', version: '31.1-jre'
+  sources        group: 'com.google.guava', name: 'guava', version: '31.1-jre', classifier: 'sources'
   implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
   sources        group: 'org.apache.commons', name: 'commons-lang3', version: '3.10', classifier: 'sources'
-  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.11.0'
-  sources        group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.11.0', classifier: 'sources'
-  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0'
-  sources        group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0', classifier: 'sources'
+  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.0'
+  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.12.0'
+  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.0'
+  implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version: '2.12.0'
+  implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.12.0'
+  implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.12.0'
 
-  graderImplementation group: 'junit', name: 'junit', version: '4.13'
-  graderSources        group: 'junit', name: 'junit', version: '4.13', classifier: 'sources'
+
+  graderImplementation group: 'junit', name: 'junit', version: '4.13.2'
+  graderSources        group: 'junit', name: 'junit', version: '4.13.2', classifier: 'sources'
   graderImplementation group: 'io.github.kostaskougios', name: 'cloning', version: '1.10.3'
   graderSources        group: 'io.github.kostaskougios', name: 'cloning', version: '1.10.3', classifier: 'sources'
 
-  graderImplementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version: '2.11.0'
-  graderSources        group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version: '2.11.0', classifier: 'sources'
-  graderImplementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.11.0'
-  graderSources        group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.11.0', classifier: 'sources'
-  graderImplementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.11.0'
-  graderSources        group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.11.0', classifier: 'sources'
+  graderImplementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
+  graderSources        group: 'commons-cli', name: 'commons-cli', version: '1.5.0', classifier: 'sources'
+
+  // Swing stuff
+  graderImplementation group: 'com.formdev', name: 'flatlaf', version: '2.0.1'
+  graderImplementation group: 'com.formdev', name: 'flatlaf', version: '2.0.1', classifier: 'sources'
+  graderImplementation group: 'com.formdev', name: 'flatlaf-swingx', version: '2.0.1'
+  graderImplementation group: 'com.formdev', name: 'flatlaf-swingx', version: '2.0.1', classifier: 'sources'
+  graderImplementation group: 'com.github.jiconfont', name: 'jiconfont-font_awesome', version: '4.7.0.1'
+  graderImplementation group: 'com.github.jiconfont', name: 'jiconfont-font_awesome', version: '4.7.0.1', classifier: 'sources'
+  graderImplementation group: 'com.github.jiconfont', name: 'jiconfont-swing', version: '1.0.0'
+  graderImplementation group: 'com.github.jiconfont', name: 'jiconfont-swing', version: '1.0.0', classifier: 'sources'
+  graderImplementation group: 'com.miglayout', name: 'miglayout-swing', version: '11.0'
+  graderImplementation group: 'com.miglayout', name: 'miglayout-swing', version: '11.0', classifier: 'sources'
+  graderImplementation group: 'org.swinglabs.swingx', name: 'swingx-core', version: '1.6.5-1'
+  graderImplementation group: 'org.swinglabs.swingx', name: 'swingx-core', version: '1.6.5-1', classifier: 'sources'
 }
 
 // Create reproducible jars
@@ -152,7 +169,11 @@ jar.enabled = false
 javadoc {
   title = 'Distributed Systems Labs Framework'
   destinationDir = file("$buildDir/doc")
-  options.addStringOption('notimestamp', '-quiet')
+  options.noTimestamp(true)
+  options.noIndex(true)
+  options.noDeprecatedList(true)
+  options.noHelp(true)
+  options.setOutputLevel(JavadocOutputLevel.QUIET)
 }
 
 tasks.assemble.dependsOn tasks.scaffoldingJar

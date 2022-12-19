@@ -6,7 +6,8 @@ THIS REPOSITORY WITH SOLUTION CODE PRIVATE.**
 
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
-    1. [On Windows](#on-windows)
+    1. [Command-line Tools On Windows](#command-line-tools-on-windows)
+    2. [Visual Debugger On Windows](#visual-debugger-on-windows)
 3. [Framework Overview and Documentation](#framework-overview-and-documentation)
 4. [Included Libraries](#included-libraries)
     1. [Lombok](#lombok)
@@ -15,7 +16,6 @@ THIS REPOSITORY WITH SOLUTION CODE PRIVATE.**
     2. [Search Tests](#search-tests)
 6. [Debugging and Logging](#debugging-and-logging)
 7. [Visualization](#visualization)
-    1. [JSON Issues](#json-issues)
 8. [Common Issues](#common-issues)
 9. [Important Notes](#important-notes)
 
@@ -113,14 +113,74 @@ In order to run the tests from the terminal, however, you also will need Python
 3 and Make.
 
 
-### On Windows
-Because of the messy terminal situation on Windows, we would strongly recommend
-using the Bash on Ubuntu on Windows terminal, which will give you a Linux
-environment. We recommend installing `python3` and `java14` through `apt-get`.
-For IntelliJ, you would have to separately install Java to be able to run tests,
-but even though you'd end up with two Java installations (one on the Linux
-subsystem and one on native Windows), it'll make your life a lot easier in the
-long run.
+### Command-line Tools On Windows
+We do not recommend using Windows. It is possible, however. You will need to
+install `make`, Python 3, and Java 14. You can do this on native Windows.
+However, installing a Windows Subsystem for Linux will make installing and
+running the command-line tools much easier (though it will potentially make
+running the visual debugger more difficult depending on your version of Windows
+and WSL; see below).
+
+If you install WSL, you can install `python3`, `java14`, and `make` through
+`apt-get`. You will still need to install Java directly on Windows, though, for
+IntelliJ. (This will result in two installations of Java.)
+
+### Visual Debugger on Windows
+On native Windows, the visual debugger will work without any additional
+configuration. However, if you are running `run-tests.py` from WSL, you may need
+to follow additional steps to be able to run GUI applications.
+
+#### WSL 2 on Windows 11
+If you are running WSL 2 on Windows 11 Build 22000 or higher, the new visual
+debugger should work without any additional configuration.
+
+#### WSL 2
+On older versions of Windows, you will need to install
+[vcXsrv](https://sourceforge.net/projects/vcxsrv/) or a similar X server to be
+able to run the new visual debugger from WSL 2.
+
+Then, configure your `.bashrc` in Ubuntu with these settings
+```bash
+echo "export DISPLAY=\$(awk '/nameserver / {print \$2; exit}' /etc/resolv.conf 2>/dev/null):0" >> ~/.bashrc
+echo "export LIBGL_ALWAYS_INDIRECT=1" >> ~/.bashrc
+```
+and reload `.bashrc`.
+```bash
+. ~/.bashrc
+```
+
+Next, we need to allow WSL 2 access through the Windows Firewall. Open "Firewall
+& Network Protection > Advanced Settings". Right-click "Inbound Rules". Then
+choose "New Rule". Set the type to "Port". Enter TCP, port 6000. Click through,
+leaving the rest of the settings default, and name the rule "WSL2 X Forwarding".
+This rule currently allows access from all locations, however, which is a
+security risk. To fix that, find the rule in "Inbound Rules", right-click, and
+select properties. Choose "Scope", and under "Remote IP Addresses" choose "These
+IP Addresses". Add `172.16.0.0/12` and `192.168.0.0/16`.
+
+You can start vcXsrv using the `XLaunch` command. You will need to have vcXsrc
+running whenever you want to run the visual debugger. Because traffic from WSL 2
+comes from a separate subnet, you will need to disable access control from
+`XLaunch`.
+
+#### WSL 1
+On WSL 1, the situation is simpler. You will still need to install
+[vcXsrv](https://sourceforge.net/projects/vcxsrv/) or a similar X server to be
+able to run the new visual debugger.
+
+Then, configure your `.bashrc` in Ubuntu with these settings
+```bash
+echo "export DISPLAY=:0" >> ~/.bashrc
+echo "export LIBGL_ALWAYS_INDIRECT=1" >> ~/.bashrc
+```
+and reload `.bashrc`.
+```bash
+. ~/.bashrc
+```
+
+You can start vcXsrv using the `XLaunch` command. You will need to have vcXsrc
+running whenever you want to run the visual debugger. The default settings are
+sufficient.
 
 
 ## Framework Overview and Documentation
@@ -241,6 +301,12 @@ message and timer handlers are not supposed to be idempotent). Furthermore, some
 of these checks rely on non-exhaustive model checking; just because they do not
 report a certain error doesn't mean the problem doesn't exist.
 
+The search tests are also equipped with a trace save/replay feature. If you use
+the `--save-traces` flag in `run-tests.py`, any time a search tests reports an
+error, it saves a file to the `traces/` directory. You can re-run these specific
+event sequences which lead to an error by invoking `run-tests.py
+--replay-traces` and visualize them with `run-tests.py --visualize-trace`.
+
 
 ## Debugging and Logging
 Use of an IDE is strongly recommended; an IntelliJ project configuration is
@@ -266,81 +332,58 @@ overriding those methods (and calling the `super` method of course).
 Included in this handout is a tool for visualizing and graphically debugging
 executions of distributed systems. You can run it in two different ways. First,
 you can start any lab from its initial state by calling `./run-tests.py --lab N
---debug NUM_SERVERS NUM_CLIENTS WORKLOAD`, where `WORKLOAD` is a comma-separated
-list of commands for the clients to send (e.g.,
-`PUT:foo:bar,APPEND:foo:baz,GET:foo`). You can even write custom parsers for the
-arguments to `--debug` by overriding `getInitialState(String[] args)` in the
-relevant subclass of `VizConfig`. The visualization tool will startup Google
-Chrome, which is the only supported browser at this time. If it cannot open a
-Chrome window, you should open a Chrome tab manually and navigate to
-`localhost:3000`. Once your list of servers appears in the top-right, click on
-"Debug!".
+--debug NUM_SERVERS NUM_CLIENTS WORKLOAD` or `./run-tests.py --lab N --debug
+NUM_SERVERS NUM_CLIENTS WORKLOAD_1 ... WORKLOAD_NUM_CLIENTS`. Here
+`WORKLOAD`/`WORKLOAD_i` is a comma-separated list of commands for the clients to
+send (e.g., `PUT:foo:bar,APPEND:foo:baz,GET:foo`). If only one workload is
+provided, all clients will send the same workload; if `NUM_CLIENTS` workloads
+are provided, then client `i` will send `WORKLOAD_i`. You can even write custom
+parsers for the arguments to `--debug` by overriding `getInitialState(String[]
+args)` in the relevant subclass of `VizConfig`.
 
-![Debug Startup](img/debug-startup.png)
+Your nodes should now appear in the main window. Each server has a "queue" of
+timers and messages waiting to be delivered to it. Clicking on the button next
+to any message or timer will deliver it to that server. Double-clicking on a
+message or timer will show more information about its state.
 
-Your servers should now appear in the main window. Each server has a "queue" of
-timers and messages waiting to be delivered to it. Clicking on any message or
-timer will deliver it to that server. Right-clicking on a message, timer, or
-server will show more information about its state.
+All nodes will be visible by default. You can hide individual nodes using the
+panel in the left sidebar.
 
-The servers are positioned in a circle by default. With more than 3 or 4
-servers, this view can be cluttered. Servers can be repositioned by clicking and
-dragging the black dot below each server.
-
-![Debug Servers](img/debug-servers.png)
-
-The bottom window shows a history of the "events" that have occurred; each
+The bottom window shows a tree of the events that have been explored; each
 message or timer delivered corresponds to an event. Clicking on states in this
 history allows you to "time travel" by going back to previous states of your
 system. If you choose a different event than was executed before--for instance,
 delivering a timer instead of a message--the history will branch. This enables
-exploration of multiple possible system traces.
-
-![Debug Servers](img/debug-branch.png)
+exploration of multiple possible system traces. The left sidebar contains a more
+detailed list of events in your current tree branch. The event most recently
+delivered is highlighted. Clicking the button next to an event will take you to
+the state after that event was delivered. You can expand the message and timer
+events in the left sidebar by double-clicking, just as you can in message queues
+and timer queues.
 
 The debugger has a couple of keyboard shortcuts for navigating the history: "n"
 will go the next event, and "p" will go to the previous event.
 
-
 The second way you can run the visualization tool is using it to visualize
 invariant-violating traces in search tests. You can have the test runner start
 the visualization when it hits an invariant violation by attaching the
-`--start-viz` flag (e.g., `./run-tests.py --lab 1 --start-viz`). Once the
-browser window is opened as before and the list of servers is displaying, click
-"Debug trace".
+`--start-viz` flag (e.g., `./run-tests.py --lab 1 --start-viz`). Now, the
+visualization tool will be pre-populated with the invariant-violating trace, the
+last state of which actually violates one of the invariants being tested for.
+You can explore this trace by using the history navigation tools described
+above. You can also click on messages or timers to explore alternate traces
+branching off the one that violated the invariant. The invariant that was
+violated will be displayed in the left sidebar; as you explore states, the icon
+next to the invariant will show whether or not the invariant was violated in the
+current state. Hovering over the invariant will show a detailed message
+describing why the invariant was violated, if available.
 
-![Trace Startup](img/trace-startup.png)
-
-Now, the visualization tool will be pre-populated with the invariant-violating
-trace, the last state of which actually violates one of the invariants being
-tested for. You can explore this trace by using the history navigation tools
-described above. You can also click on messages or timers to explore alternate
-traces branching off the one that violated the invariant.
-
-![Trace](img/trace-servers.png)
-
-### Run-until
-You can save some time by asking the visualization tool to find a state matching
-a particular predicate. Click "Run Until" and then "Predicate":
-
-![Run until](img/debug-rununtil.png)
-
-Enter a predicate in the window that pops up. Predicates have the form
-`<server-name>.<path> = <value>`, for instance, `server1.proposer.ballot = 4` or
-`server2.leader = true`. If the visualization tool cannot find such a state
-after 10 seconds, it will time out.
-
-
-### JSON Issues
-If your `Node`s, `Message`s, or `Timer`s contain circular references, you may
-run into issues using the visualization tool. In this case, you will have to
-remove the circular references or define custom JSON serializers for the
-offending classes. The testing framework uses the
-[Jackson](https://github.com/FasterXML/jackson) library for JSON serialization.
-To define a custom serializer for class `Foo`, first create a class which
-extends `StdSerializer<Foo>` (e.g., `FooSerializer`). Then, add the
-`@JsonSerialize(using = YourFooSerializerClass.class)` annotation to the `Foo`
-class.
+Adding the `--start-viz` flag to `./run-tests.py` will also start the
+visualization tool if the search is unable to find a particular state it is
+looking for. In this case, the tool will be pre-populated with a trace that ends
+in the state the search started from. This allows you to manually explore
+possible executions to check if a matching state actually exists. The goal that
+was being sought will be displayed in the left sidebar.
 
 
 ---

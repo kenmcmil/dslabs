@@ -7,6 +7,7 @@ import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.LocalAddress;
+import dslabs.framework.testing.junit.Lab;
 //import dslabs.framework.testing.visualization.VizConfig;
 import dslabs.kvstore.KVStore.Append;
 import dslabs.kvstore.KVStore.Get;
@@ -17,10 +18,11 @@ import java.util.stream.Collectors;
 
 import static dslabs.sharedobject.ChainRepAppendTest.builder;
 
+@Lab("1")
 public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizConfig {
     @Override
     public SearchState getInitialState(int numServers, int numClients,
-                                       List<String> commands) {
+                                       List<List<String>> commands) {
         SearchState searchState =
                 super.getInitialState(0, numClients, commands);
         for (Address sa : dslabs.sharedobject.ChainRepAppendTest.servers) {
@@ -30,11 +32,13 @@ public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizCon
     }
 
     @Override
-    protected StateGenerator stateGenerator(List<String> workload) {
+    protected StateGenerator stateGenerator(List<Address> servers,
+                                            List<Address> clients,
+                                            List<List<String>> workload) {
         StateGeneratorBuilder builder = builder();
         builder.workloadSupplier(a -> {
                 List<Command> cs = new ArrayList<Command>();
-                for (String s : workload) {
+                for (String s : workload.get(workload.size()==1?0:clients.indexOf(a))) {
                     List<String> fs = Arrays.asList(s.split(":"));
                     if (fs.size() == 1) {
                         cs.add(new Append("k",fs.get(0)));

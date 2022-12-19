@@ -7,7 +7,7 @@ import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.junit.BaseJUnitTest;
-import dslabs.framework.testing.junit.PrettyTestName;
+import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.runner.RunState;
 import helloworld.HelloApplication.Hello;
@@ -36,7 +36,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Hello test!")
+    @TestDescription("Hello test!")
     @Category({RunTests.class})
     public void test01BasicHello() throws InterruptedException {
 

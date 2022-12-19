@@ -9,7 +9,7 @@ import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.junit.BaseJUnitTest;
-import dslabs.framework.testing.junit.PrettyTestName;
+import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.junit.SearchTests;
 import dslabs.framework.testing.junit.UnreliableTests;
@@ -79,7 +79,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Single client ping test")
+    @TestDescription("Single client ping test")
     @Category({RunTests.class})
     public void test01BasicToken() throws InterruptedException {
 
@@ -108,7 +108,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Check eventual consistency")
+    @TestDescription("Check eventual consistency")
     @Category(SearchTests.class)
     public void test02BasicToken() throws InterruptedException {
         

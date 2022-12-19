@@ -22,14 +22,15 @@
 
 package dslabs.framework.testing.search;
 
-import dslabs.framework.testing.AbstractState;
 import dslabs.framework.testing.StatePredicate;
+import dslabs.framework.testing.StatePredicate.PredicateResult;
 import dslabs.framework.testing.TestSettings;
 import dslabs.framework.testing.utils.GlobalSettings;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.java.Log;
 
 /**
  * Collection of settings used by the search tests.
@@ -38,7 +39,9 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class SearchSettings extends TestSettings<SearchSettings> {
+@Log
+public class SearchSettings extends TestSettings<SearchSettings>
+        implements Cloneable {
     private volatile int maxDepth = -1;
     private volatile int numThreads = defaultNumThreads();
     private volatile int outputFreqSecs = GlobalSettings.verbose() ? 5 : -1;
@@ -69,11 +72,43 @@ public class SearchSettings extends TestSettings<SearchSettings> {
         return this;
     }
 
+    /**
+     * Whether the state should be pruned. Currently, exceptions thrown during
+     * prune evaluation are logged, and the state is pruned.
+     *
+     * @param state
+     *         the state to check
+     * @return true if any prune predicates match the state
+     */
     public final boolean shouldPrune(SearchState state) {
-        for (StatePredicate prune : prunes) {
-            if (prune.test(state)) {
-                return true;
+        for (StatePredicate p : prunes) {
+            PredicateResult r = p.test(state, false);
+            if (r == null) {
+                continue;
             }
+            /*
+                TODO: actually treat this as an error and have it stop the
+                      search. This is going to require a bit of re-architecture
+                      in the way search works (and even has implications for how
+                      traces are saved and the visual debugger works).
+
+                For now, we log the error and treat the state as pruned. This is
+                because some searches rely on states being pruned for
+                correctness. It is always safe to ignore more states, but if the
+                search is allowed to examine states it shouldn't, it could
+                report erroneous results.
+
+                Below, we do the same with goals, but there, predicates throwing
+                exceptions are simply ignored.
+
+                The issue is not that important; very few predicates *can* throw
+                exceptions (possibly only the Paxos interface predicates), but
+                it's still important to deal with.
+             */
+            if (r.exceptionThrown()) {
+                LOG.severe(r.errorMessage());
+            }
+            return true;
         }
         return false;
     }
@@ -88,17 +123,29 @@ public class SearchSettings extends TestSettings<SearchSettings> {
         return this;
     }
 
-    public final StatePredicate whichGoalMatched(AbstractState state) {
-        for (StatePredicate goal : goals) {
-            if (goal.test(state)) {
-                return goal;
+    /**
+     * The result of any goal predicate which matches the state, or {@code null}
+     * if none does. Currently, exceptions thrown during goal evaluation are
+     * logged to stderr and ignored.
+     *
+     * @param state
+     *         the state to check
+     * @return the result or {@code null}
+     */
+    public final PredicateResult goalMatched(SearchState state) {
+        for (StatePredicate p : goals) {
+            PredicateResult r = p.test(state, false);
+            if (r == null) {
+                continue;
             }
+            // TODO: see above
+            if (r.exceptionThrown()) {
+                LOG.severe(r.errorMessage());
+                continue;
+            }
+            return r;
         }
         return null;
-    }
-
-    public final boolean goalMatched(AbstractState state) {
-        return whichGoalMatched(state) != null;
     }
 
     @Override
@@ -154,5 +201,22 @@ public class SearchSettings extends TestSettings<SearchSettings> {
         outputFreqSecs(5);
         numThreads(defaultNumThreads());
         return this;
+    }
+
+    public SearchSettings() {
+    }
+
+    private SearchSettings(SearchSettings s) {
+        super(s);
+        goals.addAll(s.goals);
+        prunes.addAll(s.prunes);
+        maxDepth = s.maxDepth;
+        numThreads = s.numThreads;
+        outputFreqSecs = s.outputFreqSecs;
+    }
+
+    @Override
+    public SearchSettings clone() {
+        return new SearchSettings(this);
     }
 }

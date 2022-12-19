@@ -1,6 +1,9 @@
 # Compiled Java
 out/
 
+# Saved traces
+traces/
+*.trace
 
 # IntelliJ
 .idea/workspace.xml
@@ -18,6 +21,3 @@ out/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-# analytics
-.usage-database.db

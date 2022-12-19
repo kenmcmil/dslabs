@@ -23,6 +23,7 @@
 package dslabs.framework.testing;
 
 import dslabs.framework.Address;
+import dslabs.framework.testing.StatePredicate.PredicateResult;
 import dslabs.framework.testing.utils.GlobalSettings;
 import java.util.Arrays;
 import java.util.Collection;
@@ -116,29 +117,25 @@ public abstract class TestSettings<T extends TestSettings<T>> {
         return self();
     }
 
-
-    public final StatePredicate whichInvariantViolated(AbstractState state) {
-        for (StatePredicate inv : invariants) {
-            if (!inv.test(state)) {
-                return inv;
+    /**
+     * The result of any invariant which is not satisfied by the state, or
+     * {@code null} if all invariants are satisfied. If an exception is thrown
+     * during invariant evaluation, this is considered an invariant violation,
+     * and the corresponding result is returned.
+     *
+     * @param state
+     *         the state to evaluate
+     * @return the result or {@code null}
+     */
+    public final PredicateResult invariantViolated(AbstractState state) {
+        for (StatePredicate p : invariants) {
+            PredicateResult r = p.test(state, true);
+            if (r != null) {
+                return r;
             }
         }
         return null;
     }
-
-    public final boolean invariantsHold(AbstractState state) {
-        for (StatePredicate inv : invariants) {
-            if (!inv.test(state)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public final boolean invariantViolated(AbstractState state) {
-        return !invariantsHold(state);
-    }
-
 
     public final boolean timeLimited() {
         return maxTimeSecs > 0;
@@ -158,7 +155,7 @@ public abstract class TestSettings<T extends TestSettings<T>> {
 
     public final boolean timeUp(long startTimeMillis) {
         return timeLimited() && System.currentTimeMillis() >
-                startTimeMillis + maxTimeSecs * 1000;
+                startTimeMillis + maxTimeSecs * 1000L;
     }
 
 
@@ -168,9 +165,9 @@ public abstract class TestSettings<T extends TestSettings<T>> {
 
 
     public final T linkActive(Address from, Address to, boolean linkActive) {
-        this.linkActive
-                .put(new ImmutablePair<>(from.rootAddress(), to.rootAddress()),
-                        linkActive);
+        this.linkActive.put(
+                new ImmutablePair<>(from.rootAddress(), to.rootAddress()),
+                linkActive);
         return self();
     }
 
@@ -266,5 +263,20 @@ public abstract class TestSettings<T extends TestSettings<T>> {
         singleThreaded(false);
         resetNetwork();
         return self();
+    }
+
+    public TestSettings() {
+    }
+
+    protected TestSettings(TestSettings<T> s) {
+        deliverTimers = s.deliverTimers;
+        invariants.addAll(s.invariants);
+        linkActive.putAll(s.linkActive);
+        maxTimeSecs = s.maxTimeSecs;
+        networkActive = s.networkActive;
+        receiverActive.putAll(s.receiverActive);
+        senderActive.putAll(s.senderActive);
+        singleThreaded = s.singleThreaded;
+        timersActive.putAll(s.timersActive);
     }
 }

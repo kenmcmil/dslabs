@@ -9,7 +9,7 @@ import dslabs.framework.testing.StateGenerator;
 import dslabs.framework.testing.StateGenerator.StateGeneratorBuilder;
 import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.junit.BaseJUnitTest;
-import dslabs.framework.testing.junit.PrettyTestName;
+import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.junit.SearchTests;
 import dslabs.framework.testing.junit.UnreliableTests;
@@ -81,7 +81,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Single client ping test")
+    @TestDescription("Single client ping test")
     @Category({RunTests.class})
     public void test01BasicAppend() throws InterruptedException {
 
@@ -107,7 +107,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @org.junit.Test(timeout = 20 * 1000)
-    @PrettyTestName("Check eventual consistency")
+    @TestDescription("Check eventual consistency")
     @Category(SearchTests.class)
     public void test02BasicAppend() throws InterruptedException {
 
@@ -141,7 +141,7 @@ public final class Test extends BaseJUnitTest {
 
     
     /*    @Test(timeout = 5 * 1000)
-    @PrettyTestName("Multiple clients can append simultaneously")
+    @TestDescription("Multiple clients can append simultaneously")
     @Category({RunTests.class})
     public void test02MultipleClientsAppend() throws InterruptedException {
         Workload workload = Workload.builder().parser(new AppendParser())
@@ -157,7 +157,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @Test(timeout = 5 * 1000)
-    @PrettyTestName("Client can still ping if some messages are dropped")
+    @TestDescription("Client can still ping if some messages are dropped")
     @Category({RunTests.class, UnreliableTests.class})
     public void test03MessagesDropped() throws InterruptedException {
         runState.addClientWorker(client(1), repeatedAppends(100));
@@ -169,7 +169,7 @@ public final class Test extends BaseJUnitTest {
     }
 
     @Test
-    @PrettyTestName("Single client repeatedly pings")
+    @TestDescription("Single client repeatedly pings")
     @Category(SearchTests.class)
     public void test04AppendSearch() throws InterruptedException {
         initSearchState.addClientWorker(client(1), repeatedAppends(10));

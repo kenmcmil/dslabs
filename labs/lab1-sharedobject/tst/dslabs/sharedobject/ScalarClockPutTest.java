@@ -30,7 +30,6 @@ import java.util.Objects;
 import lombok.NonNull;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.FixMethodOrder;
 //import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -40,7 +39,6 @@ import java.util.HashMap;
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Lab("1")
 @Part(2)
 public final class ScalarClockPutTest extends BaseJUnitTest {
@@ -182,7 +180,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @TestDescription("Check eventual consistency, two keys")
     @Category(SearchTests.class)
     @TestPointValue(10)
-    public void test02BBasicPut() throws InterruptedException {
+    public void test03BBasicPut() throws InterruptedException {
 
         StatePredicate showResultsMatch =
             statePredicate("Replicas consistent when network quiescent, different keys",
@@ -227,7 +225,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @TestDescription("Do not send too many messages for read-only commands.")
     @TestPointValue(10)
     @Category({RunTests.class})
-    public void test03OneServerMessagePerGet() throws InterruptedException {
+    public void test04OneServerMessagePerGet() throws InterruptedException {
 
         StatePredicate oneServerMessagePerGet =
             statePredicate("At most one message to server per read-only command",
@@ -254,7 +252,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @TestDescription("Do not send too many messages for update commands.")
     @TestPointValue(10)
     @Category({RunTests.class})
-    public void test04TwoServerMessagePerPut() throws InterruptedException {
+    public void test05TwoServerMessagePerPut() throws InterruptedException {
 
         StatePredicate twoServerMessagePerPut =
             statePredicate("At most two message to servers per updatecommand",
@@ -281,7 +279,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @TestDescription("Do not send multiple replies to clients.")
     @Category({RunTests.class})
     @TestPointValue(5)
-    public void test05OneReplyPerRequest() throws InterruptedException {
+    public void test06OneReplyPerRequest() throws InterruptedException {
 
         StatePredicate oneReplyPerRequest =
             statePredicate("At most one reply to client per command",
@@ -310,7 +308,7 @@ public final class ScalarClockPutTest extends BaseJUnitTest {
     @TestDescription("Results OK for non-concurrent commands")
     @TestPointValue(10)
     @Category({RunTests.class})
-    public void test06ResultsOkNonconcurrent() throws InterruptedException {
+    public void test07ResultsOkNonconcurrent() throws InterruptedException {
 
         for (int i = 0; i < numServers; i++) 
             runState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);

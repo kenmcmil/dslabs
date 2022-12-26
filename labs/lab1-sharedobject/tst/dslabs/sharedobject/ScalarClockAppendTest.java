@@ -30,7 +30,6 @@ import java.util.Objects;
 import lombok.NonNull;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.FixMethodOrder;
 //import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -40,9 +39,8 @@ import java.util.HashMap;
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Lab("1")
-@Part(2)
+@Part(3)
 public final class ScalarClockAppendTest extends BaseJUnitTest {
 
     public static final int numServers = 2;

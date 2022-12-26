@@ -32,7 +32,7 @@ sourceSets {
   labs {
     java {
       srcDirs = [ 'labs/lab0-pingpong/src',
-                  'labs/lab1-clientserver/src',
+                  'labs/lab1-sharedobject/src',
                   'labs/lab2-primarybackup/src',
                   'labs/lab3-paxos/src',
                   'labs/lab4-shardedstore/src' ]
@@ -44,7 +44,7 @@ sourceSets {
   labsTests {
     java {
       srcDirs = [ 'labs/lab0-pingpong/tst',
-                  'labs/lab1-clientserver/tst',
+                  'labs/lab1-sharedobject/tst',
                   'labs/lab2-primarybackup/tst',
                   'labs/lab3-paxos/tst',
                   'labs/lab4-shardedstore/tst']

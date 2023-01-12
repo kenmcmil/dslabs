@@ -6,8 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/framework/tst" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/labs/lab3-paxos/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/labs/lab3-paxos/tst" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/labs/lab1-clientserver/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/labs/lab1-clientserver/tst" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/labs/lab1-sharedobject/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/labs/lab1-sharedobject/tst" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/labs/lab2-primarybackup/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/labs/lab2-primarybackup/tst" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/labs/lab4-shardedstore/src" isTestSource="false" />

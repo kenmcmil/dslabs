@@ -1,4 +1,4 @@
-package append1;
+package dslabs.append1;
 
 import dslabs.framework.Command;
 import dslabs.framework.Address;
@@ -9,15 +9,15 @@ import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.LocalAddress;
 import dslabs.framework.testing.junit.Lab;
 //import dslabs.framework.testing.visualization.VizConfig;
-import append1.AppendApplication.Append;
-import append1.AppendApplication.Show;
+import dslabs.append1.AppendApplication.Append;
+import dslabs.append1.AppendApplication.Show;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static append1.Test.builder;
-//import static append1.Test.sas;
+import static dslabs.append1.Test.builder;
+//import static dslabs.append1.Test.sas;
 
 @Lab("append1")
 public class VizConfig extends dslabs.framework.testing.visualization.VizConfig {
@@ -43,7 +43,11 @@ public class VizConfig extends dslabs.framework.testing.visualization.VizConfig 
                 List<Command> cs = new ArrayList<Command>();
                 for (String s : workload.get(workload.size()==1?0:clients.indexOf(a))) {
                     List<String> fs = Arrays.asList(s.split(":"));
-                    if (fs.size() == 1) {
+                    if (fs.size() == 1 && fs.get(0).equals("Show")) {
+                        cs.add(new Show());
+                    } else if (fs.size() == 2 && fs.get(0).equals("Append")) {
+                        cs.add(new Append(fs.get(1)));
+                    } else if (fs.size() == 1) {
                         cs.add(new Append(fs.get(0)));
                     } else if (fs.size() == 2 && fs.get(1).equals("Show")) {
                         System.out.println("fs: " + fs + " a: " + a);

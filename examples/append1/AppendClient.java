@@ -1,4 +1,4 @@
-package append1;
+package dslabs.append1;
 
 import com.google.common.base.Objects;
 import dslabs.framework.Address;

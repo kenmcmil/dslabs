@@ -1,7 +1,7 @@
-package tokenring;
+package dslabs.tokenring;
 
 
-import tokenring.Test;
+import dslabs.tokenring.Test;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;

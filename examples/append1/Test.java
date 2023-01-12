@@ -1,4 +1,4 @@
-package append1;
+package dslabs.append1;
 
 import com.google.common.collect.Iterables;
 import dslabs.framework.Address;
@@ -17,11 +17,12 @@ import dslabs.framework.testing.runner.RunState;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.SerializableFunction;
 import dslabs.framework.testing.StatePredicate;
+import dslabs.framework.testing.junit.Lab;
 import static dslabs.framework.testing.StatePredicate.statePredicate;
-import append1.AppendApplication.Append;
-import append1.AppendApplication.AppendResult;
-import append1.AppendApplication.Show;
-import append1.AppendApplication.ShowResult;
+import dslabs.append1.AppendApplication.Append;
+import dslabs.append1.AppendApplication.AppendResult;
+import dslabs.append1.AppendApplication.Show;
+import dslabs.append1.AppendApplication.ShowResult;
 import java.util.Objects;
 import lombok.NonNull;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -36,7 +37,8 @@ import java.util.List;
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
 import static dslabs.framework.testing.StatePredicate.RESULTS_OK;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Lab("append1")
+//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class Test extends BaseJUnitTest {
     static final List<Address> sas = Arrays.asList(server(1),server(2));
 

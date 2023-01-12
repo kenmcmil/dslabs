@@ -1,4 +1,4 @@
-package helloworld;
+package dslabs.helloworld;
 
 import dslabs.framework.Application;
 import dslabs.framework.Address;

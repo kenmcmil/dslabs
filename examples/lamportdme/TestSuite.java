@@ -1,7 +1,7 @@
-package lamportdme;
+package dslabs.lamportdme;
 
 
-import lamportdme.Test;
+import dslabs.lamportdme.Test;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;

@@ -1,4 +1,4 @@
-package helloworld;
+package dslabs.helloworld;
 
 import dslabs.framework.Command;
 import dslabs.framework.Address;
@@ -9,13 +9,13 @@ import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.LocalAddress;
 import dslabs.framework.testing.junit.Lab;
 //import dslabs.framework.testing.visualization.VizConfig;
-import helloworld.HelloApplication.Hello;
+import dslabs.helloworld.HelloApplication.Hello;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static helloworld.Test.builder;
+import static dslabs.helloworld.Test.builder;
 
 @Lab("helloworld")
 public class VizConfig extends dslabs.framework.testing.visualization.VizConfig {

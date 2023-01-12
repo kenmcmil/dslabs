@@ -1,4 +1,4 @@
-package lamportdme;
+package dslabs.lamportdme;
 
 import dslabs.framework.Address;
 import dslabs.framework.Node;

@@ -1,4 +1,4 @@
-package tokenring;
+package dslabs.tokenring;
 
 import dslabs.framework.Message;
 import lombok.Data;

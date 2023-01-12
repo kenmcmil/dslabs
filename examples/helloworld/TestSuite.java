@@ -1,4 +1,4 @@
-package helloworld;
+package dslabs.helloworld;
 
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;

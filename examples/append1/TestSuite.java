@@ -1,7 +1,7 @@
-package append1;
+package dslabs.append1;
 
 
-import append1.Test;
+import dslabs.append1.Test;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;

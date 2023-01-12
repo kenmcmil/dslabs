@@ -1,4 +1,4 @@
-package lamportdme;
+package dslabs.lamportdme;
 
 import com.google.common.collect.Iterables;
 import dslabs.framework.Address;

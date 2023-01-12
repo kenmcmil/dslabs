@@ -1,10 +1,10 @@
-package append1;
+package dslabs.append1;
 
 import dslabs.framework.Address;
 import dslabs.framework.Node;
 import dslabs.framework.Command;
 import dslabs.framework.Result;
-// import dslabs.append1.AppendApplication;
+// import dslabs.dslabs.append1.AppendApplication;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 

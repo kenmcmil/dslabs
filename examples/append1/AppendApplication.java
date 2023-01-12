@@ -1,4 +1,4 @@
-package append1;
+package dslabs.append1;
 
 import dslabs.framework.Application;
 import dslabs.framework.Command;

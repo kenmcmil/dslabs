@@ -1,4 +1,4 @@
-package helloworld;
+package dslabs.helloworld;
 
 import dslabs.framework.Address;
 import dslabs.framework.Command;
@@ -10,8 +10,8 @@ import dslabs.framework.testing.junit.BaseJUnitTest;
 import dslabs.framework.testing.junit.TestDescription;
 import dslabs.framework.testing.junit.RunTests;
 import dslabs.framework.testing.runner.RunState;
-import helloworld.HelloApplication.Hello;
-import helloworld.HelloApplication.HelloResult;
+import dslabs.helloworld.HelloApplication.Hello;
+import dslabs.helloworld.HelloApplication.HelloResult;
 import org.junit.FixMethodOrder;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;

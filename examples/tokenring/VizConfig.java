@@ -1,4 +1,4 @@
-package tokenring;
+package dslabs.tokenring;
 
 import dslabs.framework.Command;
 import dslabs.framework.Address;
@@ -9,15 +9,15 @@ import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.LocalAddress;
 import dslabs.framework.testing.junit.Lab;
 //import dslabs.framework.testing.visualization.VizConfig;
-import append1.AppendApplication.Append;
-import append1.AppendApplication.Show;
+import dslabs.append1.AppendApplication.Append;
+import dslabs.append1.AppendApplication.Show;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static tokenring.Test.builder;
-//import static append1.Test.sas;
+import static dslabs.tokenring.Test.builder;
+//import static dslabs.append1.Test.sas;
 
 @Lab("tokenring")
 public class VizConfig extends dslabs.framework.testing.visualization.VizConfig {

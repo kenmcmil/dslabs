@@ -109,7 +109,7 @@ def run_tests(lab, part=None, no_run=False, no_search=False,
 
 
 
-def run_viz_debugger(lab, args, assertions=False):
+def run_viz_debugger(lab, part, debug_args, assertions=False):
     """Start the visual debugger."""
     make()
 
@@ -125,7 +125,9 @@ def run_viz_debugger(lab, args, assertions=False):
     ]
 
     command += ['--lab', str(lab)]
-    command += args
+    if part is not None:
+        command += ['--part', str(part)]
+    command += debug_args
 
     returncode = subprocess.call(command)
     sys.exit(returncode)
@@ -266,10 +268,10 @@ def main():
         if args.lab is None:
             parser.error("-l/--lab is required with -d/--debugger")
         disallow_arguments('-d/--debugger',
-            ('-p/--part', '--checks', '-n/--test-num', '--no-run',
+            ('--checks', '-n/--test-num', '--no-run',
              '--no-search', '--no-timeouts', '-g/--log-level',
              '--single-threaded', '-s/--save-traces', '-z/--start-viz'))
-        run_viz_debugger(args.lab, args.debugger, assertions=args.assertions)
+        run_viz_debugger(args.lab, args.part, args.debugger, assertions=args.assertions)
 
     elif args.replay_traces is not None:
         if args.part is not None and args.lab is None:

@@ -8,6 +8,7 @@ import dslabs.framework.testing.Workload;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.LocalAddress;
 import dslabs.framework.testing.junit.Lab;
+import dslabs.framework.testing.junit.Part;
 //import dslabs.framework.testing.visualization.VizConfig;
 import dslabs.kvstore.KVStore.Append;
 import dslabs.kvstore.KVStore.Get;
@@ -16,10 +17,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static dslabs.sharedobject.ChainRepAppendTest.builder;
-
 @Lab("1")
+@Part(1)
 public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizConfig {
+    StateGeneratorBuilder builder() {
+        return dslabs.sharedobject.ChainRepAppendTest.builder();
+    }
     @Override
     public SearchState getInitialState(int numServers, int numClients,
                                        List<List<String>> commands) {
@@ -30,7 +33,6 @@ public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizCon
         }
         return searchState;
     }
-
     @Override
     protected StateGenerator stateGenerator(List<Address> servers,
                                             List<Address> clients,
@@ -40,19 +42,11 @@ public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizCon
                 List<Command> cs = new ArrayList<Command>();
                 for (String s : workload.get(workload.size()==1?0:clients.indexOf(a))) {
                     List<String> fs = Arrays.asList(s.split(":"));
-                    if (fs.size() == 1) {
-                        cs.add(new Append("k",fs.get(0)));
-                    } else if (fs.size() == 2 && fs.get(1).equals("Get")) {
-                        System.out.println("fs: " + fs + " a: " + a);
-                        if (a.equals(new LocalAddress(fs.get(0)))) {
-                            cs.add(new Get("k"));
-                        } 
-                    } else if (fs.size() == 3 && fs.get(1).equals("Append")) {
-                        System.out.println("fs: " + fs + " a: " + a);
-                        if (a.equals(new LocalAddress(fs.get(0)))) {
-                            cs.add(new Append("k",fs.get(2)));
-                        } 
-                    } else {
+                    if (fs.size() == 2 && fs.get(0).equals("Get")) {
+                        cs.add(new Get(fs.get(1)));
+                    } else if (fs.size() == 3 && fs.get(0).equals("Append")) {
+                        cs.add(new Append(fs.get(1),fs.get(2)));
+                    } else { 
                         throw new IllegalArgumentException();
                     }
                 }
@@ -63,3 +57,4 @@ public class Lab1VizConfig extends dslabs.framework.testing.visualization.VizCon
         return builder.build();
     }
 }
+

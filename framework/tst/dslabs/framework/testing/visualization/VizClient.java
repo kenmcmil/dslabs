@@ -24,6 +24,7 @@
 package dslabs.framework.testing.visualization;
 
 import dslabs.framework.testing.junit.Lab;
+import dslabs.framework.testing.junit.Part;
 import dslabs.framework.testing.search.SearchSettings;
 import dslabs.framework.testing.search.SearchState;
 import dslabs.framework.testing.utils.ClassSearch;
@@ -43,8 +44,13 @@ public abstract class VizClient {
                                  .type(String.class).argName("LAB").hasArg(true)
                                  .numberOfArgs(1).desc("lab identifier")
                                  .build();
+        final Option part= Option.builder("p").longOpt("part").required(false)
+                                 .type(String.class).argName("PART").hasArg(true)
+                                 .numberOfArgs(1).desc("part identifier")
+                                 .build();
         final Option help = Option.builder("h").longOpt("help").build();
         options.addOption(lab);
+        options.addOption(part);
         options.addOption(help);
         final CommandLineParser parser = new DefaultParser();
         CommandLine line = null;
@@ -58,26 +64,32 @@ public abstract class VizClient {
                 System.err.println(e.getMessage());
             }
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("-l/--lab LAB <VIZ_ARGUMENTS> [-h/--help]",
+            formatter.printHelp("-l/--lab LAB [-p/--part PART] <VIZ_ARGUMENTS> [-h/--help]",
                     options);
             return;
         }
 
         final String labID = line.getOptionValue(lab);
+        final String partID = line.getOptionValue(part,"1");
 
         VizConfig config = null;
         for (var c : ClassSearch.vizConfigs()) {
             Lab l;
             if ((l = c.getAnnotation(Lab.class)) != null &&
-                    l.value().equals(labID)) {
-                config = c.getDeclaredConstructor().newInstance();
-                break;
+                l.value().equals(labID)) {
+                Part p = c.getAnnotation(Part.class);
+                System.out.println("p: " + p);
+                if(partID == null || String.valueOf(p.value()).equals(partID)) {
+                    config = c.getDeclaredConstructor().newInstance();
+                    break;
+                }
             }
         }
 
         if (config == null) {
             throw new RuntimeException(
-                    "Could not find viz config for lab " + labID);
+                    "Could not find viz config for lab " + labID +
+                        (partID == null ? "" : (", part " + partID)));
         }
 
         String[] vizArgs = line.getArgs();

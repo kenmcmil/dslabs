@@ -47,7 +47,7 @@ public class VizConfigSanityCheckTest {
         Set<String> seen = new HashSet<>();
         for (var c : ClassSearch.vizConfigs()) {
             assertNotNull(c.getAnnotation(Lab.class));
-            assertTrue(seen.add(c.getAnnotation(Lab.class).value()));
+            assertTrue(c.getAnnotation(Part.class) != null || seen.add(c.getAnnotation(Lab.class).value()));
         }
     }
 }

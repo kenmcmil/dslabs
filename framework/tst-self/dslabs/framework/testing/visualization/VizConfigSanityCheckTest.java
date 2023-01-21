@@ -23,6 +23,7 @@
 package dslabs.framework.testing.visualization;
 
 import dslabs.framework.testing.junit.Lab;
+import dslabs.framework.testing.junit.Part;
 import dslabs.framework.testing.utils.ClassSearch;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;

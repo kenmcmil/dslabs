@@ -8,6 +8,6 @@ import dslabs.framework.testing.junit.Part;
 @Part(3)
 public class Lab1Part3VizConfig extends Lab1VizConfig {
     StateGeneratorBuilder builder() {
-        return dslabs.sharedobject.ScalarClockPutTest.builder();
+        return dslabs.sharedobject.ScalarClockAppendTest.builder();
     }
 }

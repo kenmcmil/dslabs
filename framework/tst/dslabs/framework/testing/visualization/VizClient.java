@@ -79,7 +79,7 @@ public abstract class VizClient {
                 l.value().equals(labID)) {
                 Part p = c.getAnnotation(Part.class);
                 System.out.println("p: " + p);
-                if(partID == null || String.valueOf(p.value()).equals(partID)) {
+                if(p == null || String.valueOf(p.value()).equals(partID)) {
                     config = c.getDeclaredConstructor().newInstance();
                     break;
                 }

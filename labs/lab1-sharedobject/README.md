@@ -38,6 +38,12 @@ Notice the `m` option is needed to update the modification time so that `make` w
 The implementation of `KVStore` isn't on github because it is a
 solution to a lab assignment in the original version of DSLabs, but you're getting it for free!
 
+The sytax of key/value store commands for the `--debug` visualization option is as follows:
+
+    Get("k") is written GET:k
+    Put("k","v") is written PUT:k:v
+    Append("k","v") is written APPEND:k:v
+    
 ## Part 1
 
 In part 1, we will use a strategy called "chain replication" to

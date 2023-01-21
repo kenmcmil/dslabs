@@ -78,7 +78,6 @@ public abstract class VizClient {
             if ((l = c.getAnnotation(Lab.class)) != null &&
                 l.value().equals(labID)) {
                 Part p = c.getAnnotation(Part.class);
-                System.out.println("p: " + p);
                 if(p == null || String.valueOf(p.value()).equals(partID)) {
                     config = c.getDeclaredConstructor().newInstance();
                     break;

@@ -166,7 +166,7 @@ public final class ScalarClockAppendTest extends BaseJUnitTest {
         
         for (int i = 0; i < numServers; i++) 
             initSearchState.addClientWorker(clients.get(i), Workload.emptyWorkload(), true);
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 2; i++) {
             for (int j = 0; j < numServers; j++) {
                 initSearchState.clientWorker(clients.get(j)).addCommand(new Append("key",String.valueOf(j)),new AppendResult(""));
             }

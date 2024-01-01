@@ -22,13 +22,20 @@
 
 package dslabs.framework.testing.junit;
 
+import com.google.common.collect.ImmutableList;
 import dslabs.framework.Address;
 import dslabs.framework.testing.LocalAddress;
 import dslabs.framework.testing.utils.GlobalSettings;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import lombok.SneakyThrows;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
 
 /**
@@ -46,8 +53,6 @@ import org.junit.runners.model.Statement;
  */
 @RunWith(DSLabsTestRunner.class)
 public abstract class DSLabsJUnitTest {
-    /* Addresses */
-
     public static Address client(int i) {
         return new LocalAddress("client" + i);
     }
@@ -56,25 +61,88 @@ public abstract class DSLabsJUnitTest {
         return new LocalAddress("server" + i);
     }
 
-    @Rule public final TestRule enableChecks = new TestRule() {
-        @Override
-        public Statement apply(Statement base, Description description) {
-            return new Statement() {
-                @Override
-                public void evaluate() throws Throwable {
-                    if (description.getAnnotation(ChecksEnabled.class) !=
-                            null) {
-                        GlobalSettings.errorChecksTemporarilyEnabled(true);
-                        try {
-                            base.evaluate();
-                        } finally {
-                            GlobalSettings.errorChecksTemporarilyEnabled(false);
-                        }
-                    } else {
-                        base.evaluate();
+    static boolean isInCategory(Description description, Class<?> category) {
+        Category cat = description.getAnnotation(Category.class);
+        return cat != null && Arrays.asList(cat.value()).contains(category);
+    }
+
+    /**
+     * Simple functional interface for a test rule that can throw exceptions.
+     */
+    @FunctionalInterface
+    interface StatementTransformer {
+        void evaluate(Statement base, Description description) throws Throwable;
+    }
+
+    /**
+     * Helper method to create JUnit test rules from lambdas.
+     */
+    static TestRule testRule(StatementTransformer rule) {
+        return new TestRule() {
+            @Override
+            public Statement apply(Statement base, Description description) {
+                return new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        rule.evaluate(base, description);
                     }
+                };
+            }
+        };
+    }
+
+    /**
+     * When a test method is marked with {@link ChecksEnabled}, this test rule
+     * ensures that extra checks are enabled during its execution.
+     */
+    @Rule
+    public final TestRule enableChecks() {
+        return testRule((base, description) -> {
+            if (description.getAnnotation(ChecksEnabled.class) != null) {
+                GlobalSettings.errorChecksTemporarilyEnabled(true);
+                try {
+                    base.evaluate();
+                } finally {
+                    GlobalSettings.errorChecksTemporarilyEnabled(false);
                 }
-            };
+            } else {
+                base.evaluate();
+            }
+        });
+    }
+
+    private List<Throwable> testFailures;
+
+    /**
+     * Throws all reported failures (even those reported through
+     * {@link #failAndContinue}) at the end of a test.
+     */
+    @Rule(order = Rule.DEFAULT_ORDER - 1)
+    public final TestRule failureMonitor() {
+        return testRule(((base, description) -> {
+            testFailures = new ArrayList<>();
+            try {
+                base.evaluate();
+            } catch (Throwable t) {
+                testFailures.add(t);
+            } finally {
+                throwFailures();
+            }
+        }));
+    }
+
+    @SneakyThrows
+    private void throwFailures() {
+        if (testFailures == null || testFailures.isEmpty()) {
+            return;
         }
-    };
+        if (testFailures.size() == 1) {
+            throw testFailures.get(0);
+        }
+        throw new MultipleFailureException(ImmutableList.copyOf(testFailures));
+    }
+
+    protected void failAndContinue(Throwable failure) {
+        testFailures.add(failure);
+    }
 }

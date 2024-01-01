@@ -68,6 +68,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -104,7 +105,12 @@ public class DebuggerWindow extends JFrame {
         }
         // Disable this for now since it doesn't seem to be useful
         // System.setProperty("sun.java2d.noddraw", "true");
-        System.setProperty("sun.java2d.uiScale.enabled", "false");
+
+        /*
+         * Disabling this because it seems to cause problems on MacOS and causes
+         * text to appear blurry
+         */
+        // System.setProperty("sun.java2d.uiScale.enabled", "false");
         System.setProperty("sun.java2d.win.uiScaleX", "1.0");
         System.setProperty("sun.java2d.win.uiScaleX", "1.0");
 
@@ -146,6 +152,8 @@ public class DebuggerWindow extends JFrame {
             new ArrayList<>();
     private final List<Pair<StatePredicate, JLabel>> prunes = new ArrayList<>();
     private final List<Pair<StatePredicate, JLabel>> goals = new ArrayList<>();
+
+    private final EventVisibilityPane eventVisibilityPane;
 
     private final Pair<JXTaskPane, JLabel> exceptionPanel;
 
@@ -275,7 +283,8 @@ public class DebuggerWindow extends JFrame {
                 new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         {
             final JXTaskPaneContainer sideBar = new JXTaskPaneContainer();
-            topSplitPane.add(sideBar);
+            final JScrollPane sideBarScrollPane = Utils.scrollPane(sideBar);
+            topSplitPane.add(sideBarScrollPane);
 
             secondarySplitPane.setResizeWeight(1.0);
             topSplitPane.add(secondarySplitPane);
@@ -328,10 +337,16 @@ public class DebuggerWindow extends JFrame {
             sideBar.add(exceptionPane);
             updateExceptionPane();
 
+            eventVisibilityPane =
+                    new EventVisibilityPane(() -> setState(currentState));
+            sideBar.add(eventVisibilityPane);
+            updateEventVisibilityPane();
+
             sideBar.setMinimumSize(new Dimension(20, 0));
+
             // Don't let sidebar be too large on startup
-            sideBar.setPreferredSize(new Dimension(
-                    Math.min(sideBar.getPreferredSize().width, 300),
+            sideBarScrollPane.setPreferredSize(new Dimension(
+                    Math.min(sideBarScrollPane.getPreferredSize().width, 300),
                     sideBar.getPreferredSize().height));
         }
         add(topSplitPane);
@@ -390,7 +405,7 @@ public class DebuggerWindow extends JFrame {
                              public void actionPerformed(ActionEvent e) {
                                  List<EventTreeState> p =
                                          currentState.pathToBestDescendent();
-                                 if (p.size() > 0) {
+                                 if (!p.isEmpty()) {
                                      setState(p.get(0));
                                  }
                              }
@@ -570,10 +585,21 @@ public class DebuggerWindow extends JFrame {
         } else {
             p.setVisible(true);
             p.setCollapsed(false);
-            l.setText(String.format(LINE_WRAPPING_FORMAT, t.toString()));
+            l.setText(String.format(LINE_WRAPPING_FORMAT, t));
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));
             l.setToolTipText(sw.toString());
+        }
+    }
+
+    private void updateEventVisibilityPane() {
+        for (var m : currentState.network()) {
+            eventVisibilityPane.addMessageCheckbox(m.message().getClass());
+        }
+        for (Address a : currentState.addresses()) {
+            for (var t : currentState.timers(a)) {
+                eventVisibilityPane.addTimerCheckbox(t.timer().getClass());
+            }
         }
     }
 
@@ -650,6 +676,7 @@ public class DebuggerWindow extends JFrame {
     void reset() {
         stateTreeCanvas.reset();
         eventsPanel.reset();
+        eventVisibilityPane.reset();
         setState(EventTreeState.convert(DebuggerWindow.this.initialState));
     }
 
@@ -662,14 +689,19 @@ public class DebuggerWindow extends JFrame {
     void setState(@NonNull EventTreeState s) {
         stateTreeCanvas.showEvent(s);
         currentState = s;
+
         for (Address a : currentState.addresses()) {
             assert statePanels.containsKey(a);
             statePanels.get(a).updateState(currentState,
                     ignoreSearchSettings ? null : searchSettings,
                     viewDeliveredMessages);
         }
-        eventsPanel.update(currentState);
+
+        eventsPanel.update(currentState,
+                eventVisibilityPane.hiddenEventClasses());
+
         updatePredicatePanes();
         updateExceptionPane();
+        updateEventVisibilityPane();
     }
 }

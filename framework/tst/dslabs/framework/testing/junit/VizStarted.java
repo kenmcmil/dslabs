@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Ellis Michael (emichael@cs.washington.edu)
+ * Copyright (c) 2018 Ellis Michael (emichael@cs.washington.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,10 @@
 
 package dslabs.framework.testing.junit;
 
-import org.junit.runner.Description;
-import org.junit.runner.Result;
-import org.junit.runner.notification.RunNotifier;
-
-class ReplaySavedTracesTestListener extends DSLabsTestListener {
-    ReplaySavedTracesTestListener(RunNotifier runNotifier) {
-        super(runNotifier);
-    }
-
-    @Override
-    public void testRunFinished(Result result) {
-        // Don't print out final results
-    }
-
-    @Override
-    public void testStarted(Description description) {
-        logTestStarted();
-        System.out.println(small_sep);
-    }
+/**
+ * Special exception which tells the JUnit test runner to stop running further
+ * tests because the visualization tool has started and an active visual
+ * debugging session is ongoing.
+ */
+public class VizStarted extends RuntimeException {
 }

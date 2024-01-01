@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Ellis Michael (emichael@cs.washington.edu)
+ * Copyright (c) 2022 Ellis Michael (emichael@cs.washington.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,18 @@
 
 package dslabs.framework.testing.junit;
 
-/**
- * Special exception which tells the JUnit test runner to stop running further
- * tests because the visualization client has started and an active visual
- * debugging session is ongoing.
- */
-public class VizClientStarted extends RuntimeException {
+import org.junit.runner.Description;
+import org.junit.runner.Result;
+
+class ReplaySavedTracesTestResultsPrinter extends TestResultsPrinter {
+    @Override
+    public void testRunFinished(Result result) {
+        // Don't print out final results
+    }
+
+    @Override
+    public void testStarted(Description description) {
+        logTestStarted();
+        System.out.println(small_sep);
+    }
 }

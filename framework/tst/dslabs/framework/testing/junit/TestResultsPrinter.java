@@ -24,23 +24,20 @@ package dslabs.framework.testing.junit;
 
 
 import com.google.common.base.Throwables;
-import dslabs.framework.testing.utils.GlobalSettings;
-import java.io.PrintStream;
 import java.text.NumberFormat;
-import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
-import org.junit.runner.notification.RunNotifier;
 
-class DSLabsTestListener extends RunListener {
+import static dslabs.framework.testing.junit.DSLabsJUnitTest.isInCategory;
+import static dslabs.framework.testing.junit.DSLabsTestCore.fullTestNumber;
+import static dslabs.framework.testing.junit.VizStartedListener.vizStarted;
+
+class TestResultsPrinter extends RunListener {
     protected static final String large_sep = StringUtils.repeat('=', 50);
     protected static final String small_sep = StringUtils.repeat('-', 50);
-
-    private final RunNotifier runNotifier;
 
     private int totalPoints = 0;
     private int pointsEarned = 0;
@@ -48,51 +45,25 @@ class DSLabsTestListener extends RunListener {
     private boolean testFailed = false;
     private long startMillis = 0;
 
-    private final PrintStream out = System.out;
-    private final PrintStream err = System.err;
-
-    static boolean isInCategory(Description description, Class<?> category) {
-        Category cat = description.getAnnotation(Category.class);
-        return cat != null && Arrays.asList(cat.value()).contains(category);
-    }
-
-    DSLabsTestListener(RunNotifier runNotifier) {
-        this.runNotifier = runNotifier;
-    }
-
-    static int testNumber(Description d) {
-        assert d.isTest();
-        String n = d.getMethodName();
-        return Integer.parseInt(n.replaceFirst("test(\\d+)\\w+", "$1"));
-    }
-
-    static String fullTestNumber(Description d) {
-        assert d.isTest();
-        Part p = d.getTestClass().getAnnotation(Part.class);
-        if (p == null) {
-            return Integer.toString(testNumber(d));
-        } else {
-            return p.value() + "." + testNumber(d);
-        }
-    }
-
     @Override
     public void testRunFinished(Result result) {
-        out.println(large_sep);
-        out.println();
-        out.println("Tests passed: " + numPassed + "/" + result.getRunCount());
-        out.println(String.format("Points: %s/%s (%.2f%%)", pointsEarned,
-                totalPoints, totalPoints != 0 ?
+        System.out.println(large_sep);
+        System.out.println();
+        System.out.println(
+                "Tests passed: " + numPassed + "/" + result.getRunCount());
+        System.out.printf("Points: %s/%s (%.2f%%)%n", pointsEarned, totalPoints,
+                totalPoints != 0 ?
                         100 * ((double) pointsEarned) / ((double) totalPoints) :
-                        0));
-        out.println("Total time: " + elapsedTimeAsString(result.getRunTime()) +
-                "s");
+                        0);
+        System.out.println(
+                "Total time: " + elapsedTimeAsString(result.getRunTime()) +
+                        "s");
         if (result.wasSuccessful()) {
-            out.println("\nALL PASS");
+            System.out.println("\nALL PASS");
         } else {
-            out.println("\nFAIL");
+            System.out.println("\nFAIL");
         }
-        out.println(large_sep);
+        System.out.println(large_sep);
     }
 
     protected void logTestStarted() {
@@ -104,8 +75,8 @@ class DSLabsTestListener extends RunListener {
     public void testStarted(Description description) {
         logTestStarted();
 
-        out.println(small_sep);
-        out.println("TEST " + fullTestNumber(description) + ": " +
+        System.out.println(small_sep);
+        System.out.println("TEST " + fullTestNumber(description) + ": " +
                 testName(description) + " (" + totalPoints(description) +
                 "pts)\n");
         totalPoints += totalPoints(description);
@@ -115,19 +86,13 @@ class DSLabsTestListener extends RunListener {
     public void testFailure(Failure failure) {
         testFailed = true;
 
-        // If we dropped into the visualization client, halt other tests
-        if (isInCategory(failure.getDescription(), SearchTests.class) &&
-                failure.getException() instanceof VizClientStarted &&
-                GlobalSettings.startVisualization()) {
-            // Don't let the main method kill the visualization client
-            DSLabsTestCore.preventExitOnFailure();
-
-            runNotifier.pleaseStop();
-        } else {
-            // Otherwise print the exception
-            err.println(
-                    Throwables.getStackTraceAsString(failure.getException()));
+        // Don't print the failure if the visualizer started.
+        if (vizStarted(failure)) {
+            return;
         }
+
+        System.err.println(
+                Throwables.getStackTraceAsString(failure.getException()));
     }
 
     @Override
@@ -135,11 +100,11 @@ class DSLabsTestListener extends RunListener {
         if (!testFailed) {
             pointsEarned += totalPoints(description);
             numPassed++;
-            out.print("...PASS");
+            System.out.print("...PASS");
         } else {
-            out.print("...FAIL");
+            System.out.print("...FAIL");
         }
-        out.println(" (" +
+        System.out.println(" (" +
                 elapsedTimeAsString(System.currentTimeMillis() - startMillis) +
                 "s)");
     }
@@ -148,7 +113,7 @@ class DSLabsTestListener extends RunListener {
     public void testAssumptionFailure(Failure failure) {
         System.out.println(
                 "ASSUMPTION FAILURE: " + testName(failure.getDescription()));
-        out.println(small_sep);
+        System.out.println(small_sep);
     }
 
     private String testName(Description description) {

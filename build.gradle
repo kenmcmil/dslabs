@@ -1,14 +1,16 @@
-// Gradle 6.4.1
-
 plugins {
   id 'java'
-  id 'com.github.johnrengelman.shadow' version '5.2.0'
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id 'com.github.jk1.dependency-license-report' version '2.5'
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jk1.license.render.TextReportRenderer
 
-sourceCompatibility = '14'
-targetCompatibility = '14'
+java {
+  sourceCompatibility = '14'
+  targetCompatibility = '14'
+}
 
 sourceSets {
   main {
@@ -78,9 +80,9 @@ repositories {
 }
 
 dependencies {
-  implementation      group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
-  annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
-  sources             group: 'org.projectlombok', name: 'lombok', version: '1.18.20', classifier: 'sources'
+  implementation      group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
+  annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
+  sources             group: 'org.projectlombok', name: 'lombok', version: '1.18.30', classifier: 'sources'
 
   implementation group: 'com.google.guava', name: 'guava', version: '31.1-jre'
   sources        group: 'com.google.guava', name: 'guava', version: '31.1-jre', classifier: 'sources'
@@ -101,6 +103,9 @@ dependencies {
 
   graderImplementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
   graderSources        group: 'commons-cli', name: 'commons-cli', version: '1.5.0', classifier: 'sources'
+
+  graderImplementation group: 'commons-io', name: 'commons-io', version: '2.13.0'
+  graderSources        group: 'commons-io', name: 'commons-io', version: '2.13.0', classifier: 'sources'
 
   // Swing stuff
   graderImplementation group: 'com.formdev', name: 'flatlaf', version: '2.0.1'
@@ -135,31 +140,31 @@ task graderJar(type: ShadowJar) {
 
 task scaffoldingSourcesJar(type: ShadowJar) {
   archiveBaseName = 'framework'
-  classifier = 'sources'
+  archiveClassifier = 'sources'
   from sourceSets.main.java
 }
 
 task graderSourcesJar(type: ShadowJar) {
   archiveBaseName = 'grader'
-  classifier = 'sources'
+  archiveClassifier = 'sources'
   from sourceSets.grader.java
 }
 
 task scaffoldingDependenciesJar(type: ShadowJar) {
   archiveBaseName = 'framework'
-  classifier = 'deps'
+  archiveClassifier = 'deps'
   configurations = [ project.configurations.runtimeClasspath ]
 }
 
 task graderDependenciesJar(type: ShadowJar) {
   archiveBaseName = 'grader'
-  classifier = 'deps'
+  archiveClassifier = 'deps'
   configurations = [ project.configurations.graderRuntimeClasspath ]
 }
 
 task scaffoldingDependenciesSourcesJar(type: ShadowJar) {
   archiveBaseName = 'framework'
-  classifier = 'deps-sources'
+  archiveClassifier = 'deps-sources'
   configurations = [ project.configurations.sources ]
 }
 
@@ -212,3 +217,9 @@ test.jvmArgs(['-ea',
               '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
               '--add-opens', 'java.base/java.util=ALL-UNNAMED',
               '--add-opens','java.base/java.util.concurrent.atomic=ALL-UNNAMED'])
+
+licenseReport {
+  configurations = ALL
+  outputDir = "${project.buildDir}/reports/licenses"
+  renderers = [ new TextReportRenderer() ]
+}

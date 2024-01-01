@@ -65,6 +65,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ClassUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static dslabs.framework.testing.visualization.Utils.makeIcon;
 
@@ -124,7 +125,13 @@ class BaseJTree extends JTree {
         // setShowsRootHandles(true);
     }
 
+    private JTreeDisplayType currentDisplayType = JTreeDisplayType.DEFAULT;
+
     void setTreeDisplayType(JTreeDisplayType jTreeDisplayType) {
+        if (currentDisplayType == jTreeDisplayType) {
+            return;
+        }
+        currentDisplayType = jTreeDisplayType;
         putClientProperty("FlatLaf.styleClass", jTreeDisplayType.styleClass);
     }
 }
@@ -134,7 +141,7 @@ class BaseJTree extends JTree {
  * Specialized JTree which displays arbitrary Java objects. These objects can be
  * arbitrarily nested and can even contain circular references. Objects are
  * expanded on demand. Objects given to a {@code JObjectTree} should not be
- * modified in any after creation of the tree.
+ * modified in any way after creation of the tree.
  */
 class ObjectJTree extends BaseJTree {
     private static class ObjectJTreeCellRenderer extends BaseJTreeCellRenderer {
@@ -260,13 +267,14 @@ class ObjectJTree extends BaseJTree {
      * MessageEnvelope, or Timer. Tree nodes expand as their children are
      * queried; this allows for circular references in object graphs.
      *
-     * Sub-classes should implement a {@code static boolean canHandle(Object)}
-     * method and should be listed in {@link #NODE_TYPES_IN_PRIORITY_ORDER}.
-     * They should also implement a constructor with arguments Object, Object.
+     * <p>Sub-classes should implement a
+     * {@code static boolean canHandle(Object)} method and should be listed in
+     * {@link #NODE_TYPES_IN_PRIORITY_ORDER}. They should also implement a
+     * constructor with arguments Object, Object.
      *
-     * All state necessary for DSLabsTreeNodes should be encoded in the key and
-     * value; sub-classes should not have any extra fields. If nodes expand and
-     * create children, children should only be added through the addChild
+     * <p>All state necessary for DSLabsTreeNodes should be encoded in the key
+     * and value; sub-classes should not have any extra fields. If nodes expand
+     * and create children, children should only be added through the addChild
      * method below.
      */
     private static abstract class ObjectTreeNode
@@ -289,16 +297,12 @@ class ObjectJTree extends BaseJTree {
         @SneakyThrows
         static protected ObjectTreeNode createNode(Class<?> clz, Object value,
                                                    ObjectJTree tree) {
-            // Non-default tree nodes don't handle null values
-            if (value == null) {
-                return new DefaultObjectNode(null, tree);
-            }
-
             for (Class<?> c : NODE_TYPES_IN_PRIORITY_ORDER) {
                 if ((Boolean) c.getDeclaredMethod("canHandle", Class.class)
                                .invoke(null, clz)) {
                     return (ObjectTreeNode) c.getDeclaredConstructor(
-                                                     Object.class, ObjectJTree.class)
+                                                     Object.class,
+                                                     ObjectJTree.class)
                                              .newInstance(value, tree);
                 }
             }
@@ -347,7 +351,7 @@ class ObjectJTree extends BaseJTree {
         }
 
         private KeyInstance keyInstance;
-        @Getter(AccessLevel.PROTECTED) private Object valueObj;
+        @Getter(AccessLevel.PROTECTED) @Nullable private Object valueObj;
         private ObjectTreeNode diffTarget;
         private boolean isDiffed = false;
         private boolean hasExpanded = false;
@@ -745,6 +749,9 @@ class ObjectJTree extends BaseJTree {
 
         @Override
         protected void expand(BiConsumer<ChildKey, ObjectTreeNode> childAdder) {
+            if (valueObj() == null) {
+                return;
+            }
             for (Entry<?, ?> entry : ((Map<?, ?>) valueObj()).entrySet()) {
                 childAdder.accept(new DefaultChildKey(entry.getKey()),
                         new MapEntryNode(entry.getValue(), tree()));
@@ -810,6 +817,9 @@ class ObjectJTree extends BaseJTree {
 
         @Override
         protected void expand(BiConsumer<ChildKey, ObjectTreeNode> childAdder) {
+            if (valueObj() == null) {
+                return;
+            }
             int i = 0;
             for (Object item : (List<?>) valueObj()) {
                 childAdder.accept(new ListKey(i), createNode(item));
@@ -881,6 +891,9 @@ class ObjectJTree extends BaseJTree {
         @Override
         protected void expand(BiConsumer<ChildKey, ObjectTreeNode> childAdder) {
             Object o = valueObj();
+            if (o == null) {
+                return;
+            }
             int i = 0;
             if (o instanceof byte[]) {
                 for (byte item : (byte[]) valueObj()) {
@@ -961,6 +974,9 @@ class ObjectJTree extends BaseJTree {
 
         @Override
         protected void expand(BiConsumer<ChildKey, ObjectTreeNode> childAdder) {
+            if (valueObj() == null) {
+                return;
+            }
             for (Object item : (Set<?>) valueObj()) {
                 childAdder.accept(new SetKey(item), createNode(item));
             }
@@ -1005,8 +1021,8 @@ class ObjectJTree extends BaseJTree {
 
         @Override
         protected String treeCellTextInternal() {
-            Class<?> primitiveClass =
-                    ClassUtils.wrapperToPrimitive(valueObj().getClass());
+            assert valueObj() != null;  // primitives cannot be null
+            Class<?> primitiveClass = ClassUtils.wrapperToPrimitive(valueObj().getClass());
 
             StringBuilder sb = new StringBuilder();
             if (keyObj() != null) {
@@ -1051,7 +1067,7 @@ class ObjectJTree extends BaseJTree {
 
         @Override
         protected String treeCellTextInternal() {
-            assert valueObj() != null && valueObj() instanceof Address;
+            assert valueObj() == null || valueObj() instanceof Address;
 
             StringBuilder sb = new StringBuilder();
             if (keyObj() != null) {
@@ -1059,7 +1075,12 @@ class ObjectJTree extends BaseJTree {
             }
             sb.append(String.format("<font color='%s'>(Address)</font>",
                     secondaryColor()));
-            sb.append(valueObj());
+            if (valueObj() != null) {
+                sb.append(valueObj());
+            } else {
+                sb.append(String.format("<font color='%s'>null</font>",
+                        secondaryColor()));
+            }
 
             return sb.toString();
         }

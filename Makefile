@@ -28,7 +28,9 @@ else
 endif
 
 
-all: build/handout/
+ALL_FILES = $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ $(LICENSE_NOTICE)
+
+all: $(ALL_FILES)
 
 dependencies:
 	./gradlew copyDependencies
@@ -44,13 +46,13 @@ build/doc/: $(FRAMEWORK_FILES)
 $(LICENSE_NOTICE): build.gradle
 	./gradlew generateLicenseReport
 
-build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ $(LICENSE_NOTICE)
+build/handout/: $(ALL_FILES)
 	rm -rf $@
 	mkdir $@ build/handout/jars
 	$(CP) -r labs examples handout-files/. $(OTHER_FILES) $@
 	$(CP) $(JAR_FILES) build/handout/jars
 	# Strip out the date from the license report for a reproducible build
-	$(SED) -Ez -e 's/This report was generated at .*//' $(LICENSE_NOTICE) > build/handout/jars/THIRD-PARTY-NOTICES.txt
+	# $(SED) -Ez -e 's/This report was generated at .*//' $(LICENSE_NOTICE) > build/handout/jars/THIRD-PARTY-NOTICES.txt
 
 build/handout.tar.gz: build/handout/
 	$(TAR) -czf $@ --transform "s/^build\/handout/dslabs/" $^

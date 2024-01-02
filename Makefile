@@ -28,9 +28,7 @@ else
 endif
 
 
-ALL_FILES = $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ $(LICENSE_NOTICE)
-
-all: $(ALL_FILES)
+all: build/handout/
 
 dependencies:
 	./gradlew copyDependencies
@@ -46,7 +44,7 @@ build/doc/: $(FRAMEWORK_FILES)
 $(LICENSE_NOTICE): build.gradle
 	./gradlew generateLicenseReport
 
-build/handout/: $(ALL_FILES)
+build/handout/: $(LAB_FILES) $(EX_FILES) $(HANDOUT_FILES) $(OTHER_FILES) build/libs/ $(LICENSE_NOTICE)
 	rm -rf $@
 	mkdir $@ build/handout/jars
 	$(CP) -r labs examples handout-files/. $(OTHER_FILES) $@

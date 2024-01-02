@@ -32,9 +32,7 @@ those concepts to you.
 
 We get there through five steps:
 - Lab 0: Investigate the framework code using a ping server.
-- Lab 1: Implement remote procedure call interface supporting many clients
-  speaking to a server implementing a key-value store, with exactly-once
-  semantics.
+- Lab 1: Implement replicated key-value stores providing eventual consistency.
 - Lab 2: Design and implement a key-value primary-backup replication system for
   the key-value store, such that the system will continue to operate through
   (most) individual server failures.
@@ -45,10 +43,9 @@ We get there through five steps:
   implements Paxos), with dynamic load balancing and atomic (transactional)
   multi-key updates across server groups.
 
-Lab 0 introduces the framework code and tools; it has no turn-in. Lab 1
-demonstrates that you can modify the framework to add some simple functionality
-that will be useful in later Labs. It is much easier than the other labs. Lab 2
-and Lab 3 are of similar difficulty. Lab 4 is somewhat harder than Labs 2 and 3.
+Lab 0 introduces the framework code and tools; it has no turn-in. Lab
+1 is relatively easy. Lab 2 and Lab 3 are of similar difficulty. Lab 4
+is somewhat harder than Labs 2 and 3.
 
 As a baseline, we give you a library that implements typed message passing
 between the nodes of a distributed system. This setup is realistic: messages can
@@ -91,10 +88,11 @@ for the basic functionality. We then run a set of "search tests" – automated
 model checks that systematically try as many message and timer orderings as
 possible, to better ensure your solution works in all (rather than just a few)
 cases. These include both safety and liveness tests. Safety tests check if
-invariants are violated along any code paths. Liveness tests check if some code
-path can produce the correct result. For each of the labs, the tests are
-cumulative – we test basic functionality first before proceeding to exploring
-corner cases.
+invariants are violated along any code paths and the results produced are
+correct. Liveness tests check that a result is eventually produced for every
+request. path can produce the correct result. For each of the labs, the tests
+are cumulative – we test basic functionality first before proceeding to
+exploring corner cases.
 
 Finally, we also include a package to produce visualizations of your solutions
 to aid in debugging, e.g., to illustrate the sequence of messages, timers,
@@ -102,33 +100,40 @@ and/or failures that might lead to a violation of the invariants of the system.
 
 
 ## Getting Started
-The only dependency for these labs is Java 14. Installing `openjdk-14-jdk` on
-most Linux distros should be sufficient.
+
+To run the framework, you need the following:
+
+1) A Linux machine, a Mac or Windows machine running WSL2.
+2) Python 3 
+3) A Java development kit (JDK 14 or later)
+4) Some command-line utilities: make, wget, gcp and gtar
+
+Installing `openjdk-14-jdk` on most Linux distros should be
+sufficient. On Mac, you may have to install Python and install the
+'python3', 'make', 'coreutils' and 'wget' packages. 
 
 For the primary IDE, we also recommend using IntelliJ (a configuration file is
 included in each repo), which also has plugin support for Project Lombok (see
 below).
 
-In order to run the tests from the terminal, however, you also will need Python
+In order to run the tests from the terminal, however, you will still need Python
 3 and Make.
 
 
 ### Command-line Tools On Windows
-We do not recommend using Windows. It is possible, however. You will need to
-install `make`, Python 3, and Java 14. You can do this on native Windows.
-However, installing a Windows Subsystem for Linux will make installing and
-running the command-line tools much easier (though it will potentially make
-running the visual debugger more difficult depending on your version of Windows
-and WSL; see below).
 
-If you install WSL, you can install `python3`, `java14`, and `make` through
+We do not recommend using the tools natively on Windows. Instead,
+use Windows Subsystem for Linux, version 2. This will make installing and
+running the command-line tools much easier.
+
+If you install WSL2, you can install `python3`, `java14`, and `make` through
 `apt-get`. You will still need to install Java directly on Windows, though, for
 IntelliJ. (This will result in two installations of Java.)
 
 ### Visual Debugger on Windows
-On native Windows, the visual debugger will work without any additional
-configuration. However, if you are running `run-tests.py` from WSL, you may need
-to follow additional steps to be able to run GUI applications.
+
+You may need to follow additional steps to be able to run GUI
+applications.
 
 #### WSL 2 on Windows 11
 If you are running WSL 2 on Windows 11 Build 22000 or higher, the new visual
@@ -137,7 +142,7 @@ debugger should work without any additional configuration.
 #### WSL 2
 On older versions of Windows, you will need to install
 [vcXsrv](https://sourceforge.net/projects/vcxsrv/) or a similar X server to be
-able to run the new visual debugger from WSL 2.
+able to run the visual debugger from WSL 2.
 
 Then, configure your `.bashrc` in Ubuntu with these settings
 ```bash
@@ -163,32 +168,14 @@ running whenever you want to run the visual debugger. Because traffic from WSL 2
 comes from a separate subnet, you will need to disable access control from
 `XLaunch`.
 
-#### WSL 1
-On WSL 1, the situation is simpler. You will still need to install
-[vcXsrv](https://sourceforge.net/projects/vcxsrv/) or a similar X server to be
-able to run the new visual debugger.
-
-Then, configure your `.bashrc` in Ubuntu with these settings
-```bash
-echo "export DISPLAY=:0" >> ~/.bashrc
-echo "export LIBGL_ALWAYS_INDIRECT=1" >> ~/.bashrc
-```
-and reload `.bashrc`.
-```bash
-. ~/.bashrc
-```
-
-You can start vcXsrv using the `XLaunch` command. You will need to have vcXsrc
-running whenever you want to run the visual debugger. The default settings are
-sufficient.
-
-
 ## Framework Overview and Documentation
-Lab 0 provides a simple example of the framework code in action. You are also
-strongly advised to read the accompanying documentation for the framework, found
-in the `doc` folder (open `index.html` in a browser). You will be creating
-subclasses of the provided classes and should understand the contract those
-classes need to follow.
+
+Lab 0 provides a simple example of the framework code in action. You
+are also strongly advised to read the accompanying documentation for
+the framework, found in the `build/handout/doc` folder (open
+`index.html` in a browser). You will be creating subclasses of the
+provided classes and should understand the contract those classes need
+to follow.
 
 Briefly, you will be creating subclasses of the `Node` class by defining
 `Message` and `Timer` handlers as well as a special `init` handler. In this

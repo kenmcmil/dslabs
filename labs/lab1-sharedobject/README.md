@@ -30,13 +30,10 @@ The `Put` and `Appends` are updates to the database, while `Get` is a
 read-only query. You can tell if a command is read-only using the
 `readOnly()` property.
 
-The key/value store is implemented in a subclass of  `Application` called `KVStore`. You can get `KVStore` by downloading `kvstore.tgz` from the Files page on Canvas and running this command in the handout directory (`dslabs`):
-
-    $ tar xzmf kvstore.tgz
-
-Notice the `m` option is needed to update the modification time so that `make` will recompile KVStore.java.
-The implementation of `KVStore` isn't on github because it is a
+The key/value store is already implemented in a subclass of  `Application` called `KVStore`. 
+The implementation of `KVStore` isn't on the public github repository because it is a
 solution to a lab assignment in the original version of DSLabs, but you're getting it for free!
+Please do not post this file on the public Internet.
 
 The sytax of key/value store commands for the `--debug` visualization option is as follows:
 

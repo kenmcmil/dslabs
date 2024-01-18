@@ -32,6 +32,11 @@ parser.add_argument(
     dest='lab',
     help='The name of the lab, such as "lab1-clientserver"',
     required=True)
+parser.add_argument(
+    '--no-tar',
+    action='store_true'
+    help='Disable untaring of submissions. I.e. the submissions were already untared.'
+)
 args = parser.parse_args()
 
 STUDENT_SUBMISSION_DIR = args.students
@@ -81,8 +86,9 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
         student_path = os.path.join(STUDENT_SUBMISSION_DIR, student)
 
         # Extract their solutions
-        tar_path = os.path.join(student_path, TAR_NAME)
-        subprocess.call(['tar', '-xf', tar_path, '--directory', student_path])
+        if not args.no_tar: 
+            tar_path = os.path.join(student_path, TAR_NAME)
+            subprocess.call(['tar', '-xf', tar_path, '--directory', student_path])
  
         # Copy over all test folders
         for lab in os.listdir(os.path.join(HANDOUT_DIRECTORY, 'labs')):

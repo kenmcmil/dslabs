@@ -1,0 +1,11 @@
+{
+  "alias_file": "aliases.txt",
+  "canvas_api_key_path": "token.txt",
+  "canvas_course_id": 1384575,
+  "canvas_page_id": 3394783,
+  "submission_path": "/home/henry/distributed/dslabs/grading/leaderboard/student_submissions",
+  "lab_name": "lab0-pingpong",
+  "lab_number": "0",
+  "handout_path": "../../handout",
+  "test_runner_path": "../../handout/run-tests.py"
+}

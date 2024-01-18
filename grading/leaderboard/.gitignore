@@ -1,0 +1,6 @@
+__pycache__
+# For safety to ensure these files aren't committed
+results
+student_submissions
+aliases.txt
+token.txt

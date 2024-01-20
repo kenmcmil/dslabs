@@ -34,7 +34,7 @@ parser.add_argument(
     required=True)
 parser.add_argument(
     '--no-tar',
-    action='store_true'
+    action='store_true',
     help='Disable untaring of submissions. I.e. the submissions were already untared.'
 )
 args = parser.parse_args()

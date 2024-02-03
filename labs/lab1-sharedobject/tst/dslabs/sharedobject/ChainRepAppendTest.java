@@ -33,6 +33,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 
 import static dslabs.framework.testing.StatePredicate.CLIENTS_DONE;
@@ -105,9 +106,14 @@ public final class ChainRepAppendTest extends BaseJUnitTest {
         StatePredicate showResultsMatch =
             statePredicate("After updates, server contents match",
                            s -> {
-                               Result r0 = Iterables.getLast(s.clientWorker(clients.get(0)).results());
-                               Result r1 = Iterables.getLast(s.clientWorker(clients.get(1)).results());
-                               return !(r0 instanceof GetResult) || !(r0 instanceof GetResult) || r0.equals(r1);
+                                List<Result> rs0 = s.clientWorker(clients.get(0)).results();
+                                List<Result> rs1 = s.clientWorker(clients.get(1)).results();
+                                if (!(rs0.size() == 3 && rs1.size() == 3)) {
+                                    return true;
+                                }
+                                Result r0 = Iterables.getLast(rs0);
+                                Result r1 = Iterables.getLast(rs1);
+                                return (r0 instanceof GetResult) && (r0 instanceof GetResult) && r0.equals(r1);
                            });
         
         for (int i = 0; i < numServers; i++) 

@@ -7,3 +7,4 @@ python3 run_grader.py
 rm -r results
 mv ../results results
 python3 post_canvas.py
+./archive.sh

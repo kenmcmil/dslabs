@@ -8,6 +8,7 @@ import json
 import requests
 import datetime
 import re
+from copy import deepcopy
 from load_config import load_config
 
 config, CANVAS_API_KEY, _ = load_config()
@@ -47,11 +48,33 @@ def put_page(auth_token, course_id, page_id, body):
     return response.json()
 
 
+def sanitize_results(results):
+    """
+    Sometimes the grader will fail, e.g. b/c a student submission
+    doesn't compile.
+    """
+
+    FAILED_DICT = {
+        "Tests passed": "FAILED TO RUN",
+        "Points": "0/0 (0.00%)",
+        "Total time": "0s",
+    }
+    for alias, result in results.items():
+        for trial in range(RUNS):
+            if results[alias][str(trial)] == {}:
+                results[alias][str(trial)] = deepcopy(FAILED_DICT)
+
+    return results
+
+
 def sort_results(results):
     """Sort results by descending average score"""
 
+    results = sanitize_results(results)
+
     score_aliases = []
     for alias, result in results.items():
+        print(alias, result)
         scores = [extract_score(result[str(run)]["Points"]) for run in range(RUNS)]
         score_aliases.append((sum(scores) / len(scores), alias))
 
@@ -152,7 +175,7 @@ def post_new_results():
         CANVAS_API_KEY, config["canvas_course_id"], config["canvas_page_id"], new_body
     )
 
-    print('Finished, response', resp)
+    print("Finished, response", resp)
 
 
 if __name__ == "__main__":

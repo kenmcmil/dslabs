@@ -45,6 +45,7 @@ def put_page(auth_token, course_id, page_id, body):
 
     payload = {"wiki_page[body]": body}
     response = requests.put(endpoint, headers=headers, data=payload)
+    print(response.status_code)
     return response.json()
 
 
@@ -61,7 +62,7 @@ def sanitize_results(results):
     }
     for alias, result in results.items():
         for trial in range(RUNS):
-            if results[alias][str(trial)] == {}:
+            if str(trial) not in results[alias] or results[alias][str(trial)] == {}:
                 results[alias][str(trial)] = deepcopy(FAILED_DICT)
 
     return results

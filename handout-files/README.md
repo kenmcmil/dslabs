@@ -391,8 +391,9 @@ was being sought will be displayed in the left sidebar.
   `synchronized` on handlers and the client interface methods. In particular,
   your nodes should allow simultaneous access to their `equals` and `hashCode`
   methods without locking or waiting. All other concurrency is handled by the
-  framework. Use of locking data structures (e.g. `Hashtable`) is likely to
-  cause search tests to deadlock.
+  framework. Use of locking data structures (including `Hashtable`, `Vector` and `Stack`) is likely to
+  cause search tests to deadlock. If you find that search tests get stuck in a state where
+  the number of explored states is not increasing, this is likely the issue.
 - Do not use any static, mutable fields in your classes (constants are fine).
   Your nodes (i.e., instances of the `Node` classes) should communicate only
   through message passing.

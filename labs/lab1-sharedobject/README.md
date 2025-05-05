@@ -93,7 +93,7 @@ messages sent by the servers should contain a scalar clock (the
 clients don't need to maintain clocks). Use the scalar clocks, the
 ordered property of the network and the fact that you only have to
 satisfy *eventual* consistency to guarantee that each server sends
-only twe messages per request. In particular, you should be able to
+only two messages per request. In particular, you should be able to
 perform all updates locally without waiting on messages from any other
 servers.
 

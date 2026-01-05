@@ -14,11 +14,11 @@ def sort_scores_by_alias(results, sort_order):
     scores = []
     for alias in sort_order:
         if alias not in results:
-            print(f"Alias {alias} not found in results, assuming 0")
-            scores.append(0)
+            print(f"Alias {alias} not found in results")
+            scores.append(alias)
         else:
-            score = [extract_score(results[alias][str(run)]["Points"]) for run in range(RUNS)] 
-            scores.append(sum(score) / len(score))
+            score = [int(results[alias][str(run)]["Points"].split('/')[0]) for run in range(RUNS)] 
+            scores.append(alias + ' ' + str(sum(score) / len(score)))
      
     return scores
 
@@ -26,7 +26,6 @@ def sort_scores_by_alias(results, sort_order):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Collect scores from the leaderboard archive')
     parser.add_argument('--result_dir', type=str, help='Path to the results directory')
-    parser.add_argument('--order', type=str, help='Path to file with list of aliases. This determines the order in which scores will be printed')
     
     args = parser.parse_args()
 
@@ -34,8 +33,8 @@ if __name__ == '__main__':
     with open(summary_path, 'r') as f:
         results = json.load(f)
         
-    with open(args.order, 'r') as f:
-        order = f.read().splitlines()
+    with open('aliases.txt', 'r') as f:
+        order = sorted([line.split(' ')[0] for line in f.read().splitlines()])
    
     scores = sort_scores_by_alias(results, order)
     

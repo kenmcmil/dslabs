@@ -31,8 +31,9 @@ def extract_score(s):
 
 def get_page(auth_token, course_id, page_id):
     """Returns Canvas page given course and page id"""
-    endpoint = f"{API_ENDPOINT}/courses/{course_id}/pages/{page_id}"
-    headers = {"Authorization": f"Bearer {auth_token}"}
+    endpoint = f"{API_ENDPOINT}/courses/{course_id}/pages/{page_id}?access_token=1017~HAR27Z8u66ZBmkJhz3tE2PuGBYNN97fzfhK3RvCFzUB274JPcQzARVWcAfaz9uHm"
+    headers = {}
+    # headers = {"Authorization": f"Bearer {auth_token}"}
 
     response = requests.get(endpoint, headers=headers)
     return response.json()
@@ -40,8 +41,10 @@ def get_page(auth_token, course_id, page_id):
 
 def put_page(auth_token, course_id, page_id, body):
     """Updates Canvas page given course id, page id, and HTML body"""
-    endpoint = f"{API_ENDPOINT}/courses/{course_id}/pages/{page_id}"
-    headers = {"Authorization": f"Bearer {auth_token}"}
+    endpoint = f"{API_ENDPOINT}/courses/{course_id}/pages/{page_id}?access_token=1017~HAR27Z8u66ZBmkJhz3tE2PuGBYNN97fzfhK3RvCFzUB274JPcQzARVWcAfaz9uHm"
+    headers = {}
+    # endpoint = f"{API_ENDPOINT}/courses/{course_id}/pages/{page_id}"
+    # headers = {"Authorization": f"Bearer {auth_token}"}
 
     payload = {"wiki_page[body]": body}
     response = requests.put(endpoint, headers=headers, data=payload)

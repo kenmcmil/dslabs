@@ -12,15 +12,25 @@ if __name__ == "__main__":
     subprocess.run(
         [
             "python3",
-            "grader.py",
-            "-s",
-            config["submission_path"],
-            "-n",
-            config["lab_number"],
-            "-l",
-            config["lab_name"],
-            "--no-tar",
+            "distributor.py",
         ],
         cwd="..",
         check=True,
     )
+
+    # subprocess.run(
+    #     [
+    #         "python3",
+    #         "grader.py",
+    #         "-s",
+    #         config["submission_path"],
+    #         "-n",
+    #         config["lab_number"],
+    #         "-l",
+    #         config["lab_name"],
+    #         "--no-tar",
+    #     ],
+    #     cwd="..",
+    #     check=True,
+    # )
+    

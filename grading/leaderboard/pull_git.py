@@ -35,11 +35,12 @@ def update_student_repos(submission_path, alias_to_git):
                 git_user = git_user.strip()
                 if alias not in existing_repos:
                     # Need to git clone the student's repo
-                    GITHUB_URL = "git@github.com"
-                    full_git_url = f"{GITHUB_URL}:{git_user}/{REPO_NAME}.git"
+                    GITHUB_URL = "https://kenmcmil:6a39bf370c4793ab538dee83925370f6f775a8e2@github.com"
+                    full_git_url = f"{GITHUB_URL}/{git_user}/{REPO_NAME}.git"
 
                     # Rename to the student's alias
                     subprocess.run(
+                        # ["git", "clone", full_git_url, alias],
                         ["git", "clone", full_git_url, alias],
                         cwd=submission_path,
                         check=True,

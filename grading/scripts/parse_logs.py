@@ -3,7 +3,7 @@ from os.path import join, isdir
 from re import search
 
 to_avg = 3
-for student in [d for d in listdir('.') if isdir(d)]:
+for student in sorted([d for d in listdir('.') if isdir(d)]):
         scores = []
         for log_path in [f for f in listdir(student) if f.startswith('test-results')]:
                 with open(join(student, log_path), 'r') as fd:

@@ -40,7 +40,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 STUDENT_SUBMISSION_DIR = args.students
-HANDOUT_DIRECTORY = '../build/handout'
+HANDOUT_DIRECTORY = 'handout'
 
 LAB_NAME = args.lab
 LAB_NUMBER = args.lab_num
@@ -122,6 +122,10 @@ for student in os.listdir(STUDENT_SUBMISSION_DIR):
             # Run tests and collect output
             log_out_path = os.path.join(student_result_path, STUDENT_TEST_LOG_NAME + '-' + str(run_index) + '.txt')
             with open(log_out_path, 'w+') as out:
+                run(
+                    ["make", "clean"],
+                    out, student_path, TIMEOUT
+                )
                 cmd = ['python', 'run-tests.py', '--lab', str(LAB_NUMBER)]
                 run(cmd, out, student_path, TIMEOUT)
 

@@ -22,8 +22,9 @@ LAB_NAME = config['lab_name']
 LAB_NUMBER = config['lab_number']
 GRADE_SCRIPT_PATH = 'grader.py'
 HOST_SUBDIVISION_DIRECTORY = 'students'
-RESULTS_DIRECTORY = 'results'
-MERGED_OUT_NAME = 'merged.json'
+RESULTS_DIRECTORY = 'distrib-results'
+MERGED_OUT_NAME = 'test-summary.txt'
+MERGED_RESULTS_DIRECTORY = 'results'
 
 TEMP_GRADE_DIR_NAME = 'GRADING'
 TEST_DIR_PATH = os.path.join(HANDOUT_PATH, LAB_NAME, 'tst', 'dslabs')
@@ -51,8 +52,8 @@ if not os.path.exists(RESULTS_DIRECTORY):
 	os.mkdir(RESULTS_DIRECTORY)
 
 # Create the merged directory within the results directory if it does not exist
-if not os.path.exists(os.path.join(RESULTS_DIRECTORY, 'merged')):
-	os.mkdir(os.path.join(RESULTS_DIRECTORY, 'merged'))
+if not os.path.exists(MERGED_RESULTS_DIRECTORY):
+	os.mkdir(MERGED_RESULTS_DIRECTORY)
 
 
 def run_host(host):
@@ -76,6 +77,7 @@ def run_host(host):
 
 	# Runs the script that was copied to the remote server
 	run_grader = ['python', 'grader.py',
+                      '--no-tar',
 		      '-s', 'students',
 		      '-n', LAB_NUMBER,
 		      '-l', LAB_NAME,
@@ -105,7 +107,7 @@ for host in HOSTS:
 		print('ERROR: host %s\'s summary file could not be found! There may be some logs to parse some grades from in the results directory.' % host)
 	else:
 		host_result_paths.append(result_path)
-	copy_tree(os.path.join(RESULTS_DIRECTORY, host + '-results', 'results'), os.path.join(RESULTS_DIRECTORY, 'merged'))
+	copy_tree(os.path.join(RESULTS_DIRECTORY, host + '-results', 'results'), MERGED_RESULTS_DIRECTORY)
 
 # TODO Finish integrating the merging and printing of a single log file
 merged = {}
@@ -113,7 +115,7 @@ for f in host_result_paths:
         with open(f, 'r') as fd:
                 merged.update(json.loads(fd.read()))
 
-with open(os.path.join(RESULTS_DIRECTORY, MERGED_OUT_NAME), 'w+') as fd:
+with open(os.path.join(MERGED_RESULTS_DIRECTORY, MERGED_OUT_NAME), 'w+') as fd:
         fd.write(json.dumps(merged))
 	
 

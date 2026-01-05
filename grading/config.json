@@ -1,8 +1,8 @@
 {
-  "hosts": [],
-  "submission_path": "/Users/kenmcm/OneDrive/CS371D/Labs/Lab2/submissions",
-  "lab_name": "lab2-primarybackup",
-  "lab_number": "2",
-  "handout_path": "../handout",
+  "hosts": ["mcmillan-gpu1.csres.utexas.edu","mcmillan-gpu2.csres.utexas.edu","mcmillan-gpu3.csres.utexas.edu"],
+  "submission_path": "leaderboard/student_submissions",
+  "lab_name": "lab4-shardedstore",
+  "lab_number": "4",
+  "handout_path": "../build/handout",
   "test_runner_path": "../handout/run-tests.py"
 }
